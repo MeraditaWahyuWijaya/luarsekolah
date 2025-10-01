@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-// import 'email_verification_screen.dart'; // <--- DIHAPUS, karena kita menggunakan satu file
+import 'home_screen.dart'; 
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -131,7 +131,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.asset('assets/email.png', height: 20), 
+          Image.asset('assets/email.png', width: 100), 
 
           Text(
             'Email Verifikasi Sudah Dikirim ke Emailmu',
@@ -179,10 +179,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
           TextButton.icon(
             onPressed: () {
+               Navigator.pushReplacement( 
+                context,
+                MaterialPageRoute(
+                  // Pindah ke HomeScreen
+                  builder: (context) => const HomeScreen(),
+                ),
+              );
               // TODO: Navigasi ke halaman Login utama
               // Anda bisa menggunakan Navigator.pop() untuk kembali ke halaman sebelumnya
               // atau menavigasi ke rute login utama.
-              print('Akses halaman masuk diklik. Navigasi ke Login.');
+              print('Akses halaman masuk diklik. Navigasi ke Home.');
             },
             icon: const Icon(Icons.open_in_new),
             label: Text(
@@ -216,7 +223,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 15),
                       Image.asset('assets/luarsekolahlogo.png', height: 40),
                       const SizedBox(height: 10),
                       Text("Daftarkan Akun Untuk Lanjut Akses ke Luarsekolah",
