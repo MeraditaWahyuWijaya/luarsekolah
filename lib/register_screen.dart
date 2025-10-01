@@ -16,6 +16,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _passwordController = TextEditingController();
   String? _recaptchaToken;
   bool _isRecaptchaVerified = false;
+  bool _isRegistered = false;
 
   // Variabel State
   bool _isPasswordVisible = false;
@@ -82,6 +83,14 @@ _passwordController.addListener(_updateButtonState);
       hasNumberOrSymbol =
           password.contains(RegExp(r'[0-9!@#\$%^&*(),.?":{}|<>]'));
     });
+  }
+    void _handleRegistration() {
+    if (_formKey.currentState!.validate()) {
+      // Simulasi proses pendaftaran berhasil
+      setState(() {
+        _isRegistered = true; // Beralih ke layar verifikasi
+      });
+    }
   }
 
   Widget _buildValidationItem(String text, bool isValid) {
@@ -180,6 +189,7 @@ _passwordController.addListener(_updateButtonState);
 
                 // Nama
                 TextFormField(
+                   controller: _nameController,
                   decoration: InputDecoration(
                     labelText: 'Nama Lengkap',
                     hintText: 'Masukkan nama lengkapmu',
@@ -193,6 +203,7 @@ _passwordController.addListener(_updateButtonState);
 
                 // Email
                 TextFormField(
+                  controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Email Aktif',
@@ -384,33 +395,41 @@ _passwordController.addListener(_updateButtonState);
                 const SizedBox(height: 24),
 
                 Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 220, 233, 255),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: const Color.fromARGB(255, 23, 137, 230),
-                        width: 1,
+                 child: InkWell( 
+                    onTap: () { // NANTI DISINI DITAMBAHIN TAP KE LOGINNN
+                     //   MaterialPageRoute(builder: (context) => LoginScreen()),
+                      // );
+                      print('Tombol "Masuk ke akunmu" ditekan!'); // NTAR DIGANTI NAVIGASI
+                    },
+                    borderRadius: BorderRadius.circular(8), // Agar efek ripple sesuai dengan radius container
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 220, 233, 255),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color.fromARGB(255, 23, 137, 230),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset('assets/havinghand.png', height: 20, width: 20),
+                          const SizedBox(width: 5),
+                          Text(
+                            "Sudah punya akun? Masuk ke akunmu",
+                            style: GoogleFonts.montserrat(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: const Color.fromARGB(255, 23, 137, 230),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset('assets/havinghand.png', height: 20, width: 20),
-                        const SizedBox(width: 5),
-                        Text(
-                          "Sudah punya akun? Masuk ke akunmu",
-                          style: GoogleFonts.montserrat(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: const Color.fromARGB(255, 23, 137, 230),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  ), 
                 ),
 
                 const SizedBox(height: 30),
