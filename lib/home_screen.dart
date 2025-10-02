@@ -15,9 +15,9 @@ class _HomeScreenState extends State<HomeScreen> {
     'assets/banner.png',
   ];
 
-  // ==========================
-  // 🔹 Helper Widgets (Moved outside the build method)
-  // ==========================
+
+  //  Helper Widgets 
+ 
 
   Widget _buildBanner() {
     return Container(
@@ -543,13 +543,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildVoucherInputCard(),
                   const SizedBox(height: 20),
 
-                  // ===== Kelas Terpopuler =====
+                  //  Kelas Terpopuler 
                   const Text('Kelas Terpopuler di Prakerja',
                       style: TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 18)),
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 220,
+                    height: 300, //awalnya 220
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: [
@@ -584,7 +584,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontWeight: FontWeight.bold, fontSize: 18)),
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 250,
+                    height: 300,// awalnya 250
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: [
@@ -687,6 +687,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }),
         items: [
           BottomNavigationBarItem(
+            backgroundColor: Color.fromRGBO(7, 126, 96, 1),
             icon: Image.asset('assets/beranda.png', width: 24, height: 24),
             activeIcon:
                 Image.asset('assets/beranda.png', width: 24, height: 24),
@@ -704,13 +705,13 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Kelasku',
           ),
           BottomNavigationBarItem(
-            icon: Image.asset('assets/koinls.png', width: 24, height: 24),
-            activeIcon: Image.asset('assets/koinls.png', width: 24, height: 24),
+            icon: Image.asset('assets/akun.png', width: 24, height: 24),
+            activeIcon: Image.asset('assets/akun.png', width: 24, height: 24),
             label: 'KoinLS',
           ),
           BottomNavigationBarItem(
-            icon: Image.asset('assets/akun.png', width: 24, height: 24),
-            activeIcon: Image.asset('assets/akun.png', width: 24, height: 24),
+            icon: Image.asset('assets/koinls.png', width: 24, height: 24),
+            activeIcon: Image.asset('assets/koinls.png', width: 24, height: 24),//Namanya ketukerrr
             label: 'Akun',
           ),
         ],

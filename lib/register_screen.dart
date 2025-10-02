@@ -127,7 +127,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   // WIDGET BARU NTAR HABIS DI VERIFIKASI EMAIL
   Widget _buildEmailVerificationScreen(String email) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 100),//atur jarak email
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -223,7 +223,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 15),
+                      const SizedBox(height: 35),
                       Image.asset('assets/luarsekolahlogo.png', height: 40),
                       const SizedBox(height: 10),
                       Text("Daftarkan Akun Untuk Lanjut Akses ke Luarsekolah",
@@ -241,9 +241,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         child: OutlinedButton(
                           onPressed: () {},
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
                             foregroundColor: Colors.black,
-                            side: BorderSide(color: Colors.grey.shade400, width: 1),
+                            side: BorderSide(color: Colors.grey.shade400, width: 1),// Garis tepi outline
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8)),
                           ),
@@ -391,7 +391,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
                       // reCAPTCHA Checkbox
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey.shade400),
                           borderRadius: BorderRadius.circular(8),
