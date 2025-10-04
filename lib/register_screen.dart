@@ -1,86 +1,155 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'home_screen.dart'; 
+import 'custom_field.dart';
+import 'login_screen.dart';
 
-class RegistrationScreen extends StatefulWidget {
-  const RegistrationScreen({super.key});
+class RegistrationScreen extends StatefulWidget { //kenapa pakainya statefull? 
+  const RegistrationScreen({super.key}); 
+//karena, 
+// 1. Ada interaksi user (button click, text input)
+// 2. Data berubah seiring waktu (timer, animation)
+// 3. Async operations (API calls, database)
+// 4. Form handling dan validation
+// 5. Dynamic UI updates
 
   @override
   State<RegistrationScreen> createState() => _RegistrationScreenState();
 }
 
-class _RegistrationScreenState extends State<RegistrationScreen> {
+class _RegistrationScreenState extends State<RegistrationScreen> { //Halaman untuk menyimpan data 
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+String? _validateName(String? value) {
+  if (value == null || value.isEmpty) {
+    return 'Nama wajib diisi';
+  }
+  return null;
+}
+
+String? _validateEmail(String? value) {
+  if (value == null || value.isEmpty) {
+    return 'Email wajib diisi';
+  }
+  if (!value.contains('@')) {
+    return 'Masukkan email yang valid';
+  }
+  return null;
+}
+
+String? _validatePhone(String? value) {
+  if (value == null || value.isEmpty) {
+    return 'Nomor WhatsApp wajib diisi';
+  }
+  if (!value.startsWith('62')) {
+    return 'Nomor harus diawali 62';
+  }
+  if (value.length < 10) {
+    return 'Nomor minimal 10 digit';
+  }
+  return null;
+}
+
+late final List<Map<String, dynamic>> registrationFields = [
+  {
+    'label': 'Nama Lengkap',
+    'controller': _nameController, // Controller unik
+    'keyboardType': TextInputType.text,
+    'isPassword': false,
+    'validator': _validateName, // Fungsi validasi
+  },
+  {
+    'label': 'Email',
+    'controller': _emailController,
+    'keyboardType': TextInputType.emailAddress,
+    'isPassword': false,
+    'validator': _validateEmail,
+  },
+  {
+    'label': 'Nomor WhatsApp',
+    'controller': _phoneController,
+    'keyboardType': TextInputType.phone,
+    'isPassword': false,
+    'validator': _validatePhone, // Contoh: validator untuk Phone
+  },
+  {
+    'label': 'Password',
+    'controller': _passwordController,
+    'keyboardType': TextInputType.text,
+    'isPassword': true,
+    'validator': _validatePassword, // Contoh: validator untuk Password
+  },
+];
   String? _recaptchaToken;
   bool _isRecaptchaVerified = false;
   
-  // State untuk mengontrol tampilan layar (Form atau Verifikasi)
-  bool _isRegistered = false; 
+  // State untuk mengontrol tampilan layar (Form atau Verifikasi) 
+  bool _isRegistered = false; //bool itu dari kata boolean yang berarti menyimpan data bernilai benar/salah 
 
   // Variabel State
   bool _isPasswordVisible = false;
   bool isFormValid = false;
 
   // State untuk Validasi Password
-  bool hasMinLength = false;
-  bool hasUppercase = false;
+  bool hasMinLength = false; // untuk validasi di password agar sesuai ketentuan yaa, 
+  bool hasUppercase = false;  //minimal 8 karakter, harus ada huruf kapital, harus ada angka atau simbol
   bool hasNumberOrSymbol = false;
 
-  // State untuk Validasi WA
-  bool waValidFormat = false;
-  bool waMinLength = false;
+  // State untuk Validasi WA   //ini untuk validasi yang ada di wa sama kayak password
+  bool waValidFormat = false; // ini formatnya harus 62 didepannya
+  bool waMinLength = false; // ini formatnya harus min 10 angka 
 
+//HALAMAN UNTUK MENENTUKAN NILAI BENAR/SALAH , jadi bool disini itu untuk menentukan benar/salahnya nilai . 
 
-  void _updateButtonState() {
-    setState(() {
-      isFormValid = 
-      _isRecaptchaVerified &&
-      _nameController.text.isNotEmpty &&
-      _emailController.text.isNotEmpty &&
-        _emailController.text.contains('@') &&
-      waValidFormat &&
-      waMinLength &&
-      hasMinLength &&
-      hasUppercase &&
-      hasNumberOrSymbol;
-    });
+  void _updateButtonState() {  //Fungsi void disini itu untuk tombol daftar akun nantinya bisa nyala/dipencet, jadi kayak semacam syarat yang harus terpenuhi gitu
+    setState(() {  //ini perintah kepada buttonnya 
+      isFormValid =  //form ini valid jikaaa??
+      _isRecaptchaVerified &&  // anda bukan robot?
+      _nameController.text.isNotEmpty && //nama tidak kosong
+      _emailController.text.isNotEmpty && //email tikdak kosong
+        _emailController.text.contains('@') && //email harus pakai "@"
+      waValidFormat && // nomor wa dengan format yg valid yaitu 62
+      waMinLength && // nomor wa dengan format min 10 angka yang dimasukkan 
+      hasMinLength && // password min format 8 karakter ?
+      hasUppercase && // password ada huruf kapital ?
+      hasNumberOrSymbol; // password punya angka dan simbol ?
+    });  // nah setelah ini semua sudah terverifikasi valid/ benar maka tombol baru bisa dipencet/muncul 
   }
 
   @override
-  void initState() {
-    super.initState();
-    _phoneController.addListener(() => _validateWhatsApp(_phoneController.text));
-    _passwordController.addListener(_validatePassword);
-    _nameController.addListener(_updateButtonState);
+  void initState() { //perintah yang dipanggil saat layar muncul 
+    super.initState(); //perintah untuk menyiapka/ cek 
+    _phoneController.addListener(() => _validateWhatsApp(_phoneController.text)); // jadi setiap kita mengetik itu, agar bisa ngecek bener atau tidaknya
+    _passwordController.addListener(_validatePassword);                           //misal kayak di password itu kan kita ga nulis huruf kapital langsung 
+    _nameController.addListener(_updateButtonState);                              // terdeteksi gabisa, nah itu pakai ini.
     _emailController.addListener(_updateButtonState);
     _phoneController.addListener(_updateButtonState);
     _passwordController.addListener(_updateButtonState);
-  }
+  } // Add listener untuk password strength check
 
-  @override
-  void dispose() {
-    _phoneController.dispose();
+  @override //halaman ini adalah untuk bersih bersih memori yang tadi digunakan oleh controller 
+  void dispose() {  //Jika Controller tidak dipanggil .dispose()--
+    _phoneController.dispose(); //meskipun layarnya sudah ditutup, mereka akan tetap "hidup" di memori aplikasi.
     _passwordController.dispose();
     _nameController.dispose();
     _emailController.dispose();
-    super.dispose();
-  }
+    super.dispose(); // nah ada juga namanya super.dispose();: Ini adalah langkah terakhir, 
+  }                   //yaitu bilang ke Flutter: "Sudah beres bersih-bersih di bagianku, sekarang lakukan juga proses bersih-bersih standar yang lain."
 
-  void _validateWhatsApp(String value) {
+  void _validateWhatsApp(String value) { // ini adalah validasi wa 
     setState(() {
-      waValidFormat = value.startsWith('62');
-      waMinLength = value.length >= 10;
+      waValidFormat = value.startsWith('62'); //NILAINYA HARUS DIAWALI 62
+      waMinLength = value.length >= 10; //MIN PANJANGANYA 10 ANGKA 
     });
   }
 
-  void _validatePassword() {
+  void _validatePassword() { //VALIDASI PASSWORD SAMA KAYAK ATAS YAAA
     final password = _passwordController.text;
     setState(() {
-      hasMinLength = password.length >= 8;
+      hasMinLength = password.length >= 8; 
       hasUppercase = password.contains(RegExp(r'[A-Z]'));
       hasNumberOrSymbol =
           password.contains(RegExp(r'[0-9!@#\$%^&*(),.?":{}|<>]'));
@@ -88,20 +157,22 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
   
   // PENGGANTI NAV PUSH
+  //Intinya: Fungsi ini adalah pemrosesan akhir pendaftaran. 
+  //Ia memastikan data valid, mencatat keberhasilan pendaftaran okkk
   void _handleRegistrationSuccess() {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState!.validate()) { //ini buat memeriksa ulang formulir kayak bilang apakah uda yakin semua syarat terpenuhi?
       // Simulasi proses pendaftaran berhasil
       setState(() {
-        _isRegistered = true; // Buat Beralih ke layar verifikasi
+        _isRegistered = true; // Buat Beralih ke layar verifikasi , nah kalau nilainya benar nantiinya bakal dialihkan ke tampilan selanjutnya 
       });
       // Opsional: Sembunyikan keyboard
       FocusScope.of(context).unfocus(); 
-      ScaffoldMessenger.of(context).hideCurrentSnackBar(); 
+      ScaffoldMessenger.of(context).hideCurrentSnackBar(); //menghilangkan snackbar 
     }
   }
 
   Widget _buildValidationItem(String text, bool isValid) {
-    return Padding(
+    return Padding(  
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
         children: [
@@ -140,9 +211,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           ),
           const SizedBox(height: 16),
 
-          RichText(
-            text: TextSpan(
-              style: GoogleFonts.montserrat(
+          RichText( //PAKAI RICHTEXT UNTUK GABUNGIN TEXT DAN WIDGET?
+            text: TextSpan( //textspan itu untuk merubah gaya dari text, misal tebel/engga , ukurannya beda dll
+              style: GoogleFonts.montserrat( //font yang dipake
                   fontSize: 16, color: Colors.black87, height: 1.5),
               children: [
                 const TextSpan(
@@ -155,12 +226,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 const TextSpan(
                   text: ' untuk melakukan verifikasi akunmu. Jika kamu tidak menerima pesan di kotak masukmu, coba untuk cek di folder spam atau ',
                 ),
-                WidgetSpan(
-                  child: InkWell(
-                    onTap: () {
+                WidgetSpan( // sama kayak textspan cuman bedanya ini widget, mungkin didalemnya bisa berisi icon,button 
+                  child: InkWell( //respon sentuhan 
+                    onTap: () { //karna yang dipilih ontap berarti nanti akan dipanggil saat mengetuk/klik 
                       // Ini buat kirim ulang kode verif
                       ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Mengirim ulang verifikasi...')));
+                          const SnackBar(content: Text('Mengirim ulang verifikasi...'))); //klik yang dimaksut klik ini
                     },
                     child: Text(
                       'kirim ulang verifikasi',
@@ -177,8 +248,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           ),
           const SizedBox(height: 32),
 
-          TextButton.icon(
-            onPressed: () {
+          TextButton.icon( //TEXT YANG BISA JADI BUTTON YANG BISA DIKLIK 
+            onPressed: () {  //JIKA DIPRESS LANGSUNG KE HALAMAN VERIF
                Navigator.pushReplacement( 
                 context,
                 MaterialPageRoute(
@@ -216,14 +287,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         // ADA 2 SCREEN NANTINYA
         child: _isRegistered 
             ? _buildEmailVerificationScreen(_emailController.text) // Tampilkan Layar Verifikasi
-            : Padding(
+            : Padding( 
                 padding: const EdgeInsets.all(16),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 35),
+                      const SizedBox(height: 30), //untuk mengatur height dari atas asset logo luar sekolah
                       Image.asset('assets/luarsekolahlogo.png', height: 40),
                       const SizedBox(height: 10),
                       Text("Daftarkan Akun Untuk Lanjut Akses ke Luarsekolah",
@@ -352,7 +423,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               borderRadius: BorderRadius.circular(8)),
                           suffixIcon: Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: [
+                            children: [ //UNTUK CHECK BENAR SALAH PASSWORD , KALAU BENAR GREEN , SALAH RED
                               if (_passwordController.text.isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.only(right: 8.0),
@@ -390,7 +461,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       const SizedBox(height: 20),
 
                       // reCAPTCHA Checkbox
-                      Container(
+                      Container( //RECAPTCHA PAKAI CONTAINER YA
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.grey.shade400),
@@ -437,7 +508,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         height: 50,
                         child: ElevatedButton(
                           onPressed: isFormValid
-                              ? _handleRegistrationSuccess // <--- PANGGIL FUNGSI BERALIH STATE
+                              ? _handleRegistrationSuccess // < PANGGIL FUNGSI BERALIH STATE
                               : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isFormValid ? const Color.fromRGBO(7, 126, 96, 1.0) : Colors.grey,
@@ -476,42 +547,44 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       const SizedBox(height: 24),
 
                       // Tombol "Sudah punya akun? Masuk ke akunmu"
-                      Center(
-                        child: InkWell( 
-                          onTap: () { 
-                            // TODO: Navigasi ke halaman Login
-                            print('Tombol "Masuk ke akunmu" ditekan! Navigasi ke Login.'); 
-                          },
-                          borderRadius: BorderRadius.circular(8), 
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: const Color.fromARGB(255, 220, 233, 255),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: const Color.fromARGB(255, 23, 137, 230),
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset('assets/havinghand.png', height: 20, width: 20),
-                                const SizedBox(width: 5),
-                                Text(
-                                  "Sudah punya akun? Masuk ke akunmu",
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
-                                    color: const Color.fromARGB(255, 23, 137, 230),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ), 
-                      ),
+                     Center(
+  child: InkWell(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    },
+    borderRadius: BorderRadius.circular(8),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(255, 220, 233, 255),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color.fromARGB(255, 23, 137, 230),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset('assets/havinghand.png', height: 20, width: 20),
+          const SizedBox(width: 5),
+          Text(
+            "Sudah punya akun? Masuk ke akunmu",
+            style: GoogleFonts.montserrat(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: const Color.fromARGB(255, 23, 137, 230),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ),
+),
 
                       const SizedBox(height: 30),
                      

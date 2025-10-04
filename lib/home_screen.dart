@@ -719,3 +719,35 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+//--------------------------------------------HALAMAN TUTOR------------------------------------//
+//CARA MEMBUAT CARD 
+
+//kita harus tau nantinya yang akan dimasukkan card itu apa aja,//
+//misal judul berarti harus ada tittle//
+//rating(karena biasanya pakai koma)= double
+//price/image.url=string
+//setelah itu kita pakai container untuk membuat box nya nanti muncul dihalaman itu, nah itu nanti di ukur width/height nya 
+//setelah itu diberi keterangan (MARGIN) mau di taruh sebelah mana. pakai box decoration untuk membuat card luar, jika mau ada shadow bisa pakai BoxShadow. 
+//jika sudah, kita pakai child lalu buat children. 
+//nah di children ini kita masukkan hal yang mau ditampilkan didalam box nanti(misal foto,text).
+//nah untuk atur didalam box itu, kita gunakan row (untuk atur secara horizontal). 
+//kalau mau widgetnya fit sama card kita bisa pakai box.fit.
+
+// CARA MEMBUAT BUTTON DARI IMAGES
+//Jika ingin membuat gambar yang bisa dipencet kita harus membuat _buildprogramicon 
+//contoh : 
+//_buildProgramIcon('assets/prakerja.png', 'Prakerja', () {
+ //print('Prakerja clicked');
+ // }),
+//Nah yang membuat images bisa di click adalah " () {} " karena akan memproses saat dipencet //
+
+//BIKIN CARD/BOX YANG LATAR BELAKANGNYA FOTO 
+//aku bikin box decoration dulu di container, 
+//ntar aku isi images yang cons nya decoration images. 
+//habis itu aku panggil images dari local. 
+//nah untuk ukurannya dibuat fitbox agar memenuhi container.
+ //dan untuk posisi gambar mau disebelah/rata mana itu pakai alignment
+
+//SIDEBOX ITU UNTUK SPASI ANTAR WIDGETT!!!
+
+
