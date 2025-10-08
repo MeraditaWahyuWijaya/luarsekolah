@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// Import yang benar (asumsi file ProfileFormScreen ada di folder screens/)
+import 'screens/profile_form_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,9 +17,25 @@ class _HomeScreenState extends State<HomeScreen> {
     'assets/banner.png',
   ];
 
+  // Fungsi yang menangani tap pada BottomNavigationBar
+  void _onItemTapped(int index) {
+    if (index == 4) { // Index 4 adalah tab 'Akun' (sesuai susunan items)
+      // Navigasi ke ProfileFormScreen
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileFormScreen()),
+      );
+    } else {
+      // Untuk tab lainnya, ubah index yang dipilih dan biarkan Body content yang berubah
+      setState(() {
+        _selectedIndex = index;
+        // NOTE: Saat ini content Body TIDAK berubah, tapi ini adalah pola yang benar.
+      });
+    }
+  }
 
-  //  Helper Widgets 
- 
+
+  //  Helper Widgets 
 
   Widget _buildBanner() {
     return Container(
@@ -456,7 +474,6 @@ class _HomeScreenState extends State<HomeScreen> {
   
   // Build Method
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -543,7 +560,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildVoucherInputCard(),
                   const SizedBox(height: 20),
 
-                  //  Kelas Terpopuler 
+                  //  Kelas Terpopuler 
                   const Text('Kelas Terpopuler di Prakerja',
                       style: TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 18)),
@@ -682,12 +699,10 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedItemColor: primaryGreen, // ini bisa tetap untuk label
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
-        onTap: (index) => setState(() {
-          _selectedIndex = index;
-        }),
+        onTap: _onItemTapped, // <-- Diubah untuk memanggil fungsi navigasi
         items: [
           BottomNavigationBarItem(
-            backgroundColor: Color.fromRGBO(7, 126, 96, 1),
+            // backgroundColor: Color.fromRGBO(7, 126, 96, 1), // Ini tidak perlu di sini
             icon: Image.asset('assets/beranda.png', width: 24, height: 24),
             activeIcon:
                 Image.asset('assets/beranda.png', width: 24, height: 24),
@@ -707,12 +722,12 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Image.asset('assets/akun.png', width: 24, height: 24),
             activeIcon: Image.asset('assets/akun.png', width: 24, height: 24),
-            label: 'KoinLS',
+            label: 'KoinLS', // Perhatikan, item ini adalah KoinLS (index 3)
           ),
           BottomNavigationBarItem(
             icon: Image.asset('assets/koinls.png', width: 24, height: 24),
-            activeIcon: Image.asset('assets/koinls.png', width: 24, height: 24),//Namanya ketukerrr
-            label: 'Akun',
+            activeIcon: Image.asset('assets/koinls.png', width: 24, height: 24),
+            label: 'Akun', // Item ini adalah Akun (index 4)
           ),
         ],
       ),
@@ -737,8 +752,8 @@ class _HomeScreenState extends State<HomeScreen> {
 //Jika ingin membuat gambar yang bisa dipencet kita harus membuat _buildprogramicon 
 //contoh : 
 //_buildProgramIcon('assets/prakerja.png', 'Prakerja', () {
- //print('Prakerja clicked');
- // }),
+//print('Prakerja clicked');
+// }),
 //Nah yang membuat images bisa di click adalah " () {} " karena akan memproses saat dipencet //
 
 //BIKIN CARD/BOX YANG LATAR BELAKANGNYA FOTO 
@@ -746,8 +761,6 @@ class _HomeScreenState extends State<HomeScreen> {
 //ntar aku isi images yang cons nya decoration images. 
 //habis itu aku panggil images dari local. 
 //nah untuk ukurannya dibuat fitbox agar memenuhi container.
- //dan untuk posisi gambar mau disebelah/rata mana itu pakai alignment
+//dan untuk posisi gambar mau disebelah/rata mana itu pakai alignment
 
 //SIDEBOX ITU UNTUK SPASI ANTAR WIDGETT!!!
-
-
