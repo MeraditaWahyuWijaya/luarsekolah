@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:luarsekolah/login_screen.dart'; 
+import 'package:luarsekolah/main.dart'; 
+import 'package:luarsekolah/utils/storage_helper.dart';
+
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -180,6 +184,7 @@ _passwordController.addListener(_updateButtonState);
 
                 // Nama
                 TextFormField(
+                   controller: _nameController,
                   decoration: InputDecoration(
                     labelText: 'Nama Lengkap',
                     hintText: 'Masukkan nama lengkapmu',
@@ -193,6 +198,7 @@ _passwordController.addListener(_updateButtonState);
 
                 // Email
                 TextFormField(
+                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Email Aktif',
@@ -339,11 +345,20 @@ _passwordController.addListener(_updateButtonState);
                   height: 50,
                   child: ElevatedButton(
                   onPressed: isFormValid
-                      ? () {
+                      ? () async {
                           if (_formKey.currentState!.validate()) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Mendaftarkan Akunmu')),
                             );
+                             StorageHelper.saveUserData(
+                              email: _emailController.text,
+                              name: _nameController.text,
+                              phone: _phoneController.text,
+                              password: _passwordController.text,);
+                              final user = await StorageHelper.getUserData();
+print('Data                   user tersimpan: $user');
+                                //AUTOFILL NYA DISINIII
+                               StorageHelper.saveLastEmail(_emailController.text);
                           }
                         }
                       : null,
@@ -384,6 +399,15 @@ _passwordController.addListener(_updateButtonState);
                 const SizedBox(height: 24),
 
                 Center(
+                child: InkWell( // Menggantikan Container/Center sebagai widget utama
+                  onTap: () {
+                    // Logic Navigasi saat tombol diklik
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    );
+                  },
+                  // Menggunakan Container untuk menampung seluruh desain visual
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     decoration: BoxDecoration(
@@ -398,6 +422,7 @@ _passwordController.addListener(_updateButtonState);
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        // Pastikan path image ini benar
                         Image.asset('assets/havinghand.png', height: 20, width: 20),
                         const SizedBox(width: 5),
                         Text(
@@ -412,6 +437,7 @@ _passwordController.addListener(_updateButtonState);
                     ),
                   ),
                 ),
+              ),
 
                 const SizedBox(height: 30),
               ],
