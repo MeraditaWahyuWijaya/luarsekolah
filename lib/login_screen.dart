@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:luarsekolah/home_screen.dart';
 import 'register_screen.dart';
-import 'home_screen.dart';
+import 'custom_field.dart'; 
+import 'package:luarsekolah/utils/storage_helper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,7 +31,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
-  void _handleLogin() {
+  // ========================
+  // HANDLE LOGIN
+  // ========================
+  void _handleLogin() async {
     if (!_isRecaptchaVerified) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Harap verifikasi reCAPTCHA')));
@@ -38,11 +42,27 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     if (_formKey.currentState!.validate()) {
-      // Navigasi ke HomePage
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()));
-    
+      final user = await StorageHelper.getUserData();
+      print('Data user di login: $user');
+      if (_emailController.text == user['email'] &&
+          _passwordController.text == user['password']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login Berhasil')),
+        );
+
+        // Simpan email terakhir untuk auto-fill login berikutnya
+        await StorageHelper.saveLastEmail(_emailController.text);
+
+        // Navigasi ke Home / MainScreen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MainScreenWithNavBar()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Email atau Password salah')),
+        );
+      }
     }
   }
 
@@ -51,6 +71,23 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadLastEmail();
+  }
+
+  // ========================
+  // LOAD LAST EMAIL
+  // ========================
+  void loadLastEmail() async {
+    final lastEmail = await StorageHelper.getLastEmail();
+     print('Email terakhir dari SharedPreferences: $lastEmail');
+    setState(() {
+      _emailController.text = lastEmail; // auto-fill email
+    });
   }
 
   @override
@@ -88,7 +125,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10)),
                 ),
-                validator: _validateEmail,
+                validator: (value) =>
+                    value == null || value.isEmpty || !value.contains('@')
+                        ? 'Masukkan email yang aktif'
+                        : null,
               ),
               const SizedBox(height: 20),
 
