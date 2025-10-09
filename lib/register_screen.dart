@@ -355,8 +355,9 @@ _passwordController.addListener(_updateButtonState);
                               phone: _phoneController.text,
                               password: _passwordController.text,);
                               final user = await StorageHelper.getUserData();
-print('Data                   user tersimpan: $user');
+                              print('Data user tersimpan: $user');
                                 //AUTOFILL NYA DISINIII
+                                //agar gausah ngisi form lagi jadi otomatis
                                StorageHelper.saveLastEmail(_emailController.text);
                           }
                         }
