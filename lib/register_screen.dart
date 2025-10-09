@@ -335,7 +335,6 @@ _passwordController.addListener(_updateButtonState);
                     ],
                   ),
                 ),
-                // ----------------------------------------------------------
 
                 const SizedBox(height: 45),
 

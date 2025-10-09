@@ -147,8 +147,8 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                       const SizedBox(height: 10),
                       Center(
   child: SizedBox(
-    // 1. Memaksa lebar tombol menjadi 50% dari lebar layar
-    // Anda bisa menyesuaikan nilai 0.5 di bawah ini.
+    //agar lebar tombol menjadi 50% dari lebar layar
+    // bisa menyesuaikan nilai 0.5 di bawah ini.
     width: MediaQuery.of(context).size.width * 0.8, 
     
     child: OutlinedButton.icon(
@@ -156,7 +156,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
         // Logika saat tombol ditekan
       },
       style: OutlinedButton.styleFrom(
-        // 2. Mengatur radius (sudut melengkung)
+       
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10), // Ubah angka 10 untuk radius yang berbeda
         ),

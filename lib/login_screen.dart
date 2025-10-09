@@ -31,9 +31,9 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
-  // ========================
+  
   // HANDLE LOGIN
-  // ========================
+ 
   void _handleLogin() async {
     if (!_isRecaptchaVerified) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -79,9 +79,9 @@ class _LoginScreenState extends State<LoginScreen> {
     loadLastEmail();
   }
 
-  // ========================
+
   // LOAD LAST EMAIL
-  // ========================
+ 
   void loadLastEmail() async {
     final lastEmail = await StorageHelper.getLastEmail();
      print('Email terakhir dari SharedPreferences: $lastEmail');
