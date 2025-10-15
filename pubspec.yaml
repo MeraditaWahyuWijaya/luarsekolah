@@ -31,18 +31,16 @@ dependencies:
   flutter:
     sdk: flutter
   google_fonts: ^6.2.1
-<<<<<<< HEAD
-  shared_preferences: ^2.3.0 
-=======
   shared_preferences: ^2.5.3
+  carousel_slider: ^5.1.1
 
 
 
->>>>>>> 77bbe0b (feat: final touches for week 03 registration feature)
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  nested_scroll_view_plus: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +70,26 @@ flutter:
   - 'assets/google.png'
   - 'assets/havinghand.png'
   - 'assets/recaptcha.png'
+  - 'assets/email.png'
+  - 'assets/fotocewe.jpg'
+  - 'assets/handsphone.png'
+  - 'assets/lainnya.png'
+  - 'assets/luarsekolahmini.png'
+  - 'assets/orangkuning.png'
+  - 'assets/poster1.png'
+  - 'assets/poster2.png'
+  - 'assets/prakerja.png'
+  - 'assets/thumbnail.png'
+  - 'assets/mera.png'
+  - 'assets/banner.png'
+  - 'assets/kelas.png'
+  - 'assets/kelasku.png'
+  - 'assets/akun.png'
+  - 'assets/beranda.png'
+  - 'assets/koinls.png'
+  - 'assets/bannercar1.jpg'
+  - 'assets/bannercar2.jpg'
+  - 'assets/nailong.jpg'
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

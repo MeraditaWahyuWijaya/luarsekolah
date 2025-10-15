@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:luarsekolah/register_screen.dart'; 
 import 'package:google_fonts/google_fonts.dart';
+import 'register_screen.dart';
+import 'custom_field.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
     useMaterial3: true,
        ),
       debugShowCheckedModeBanner: false, 
-      home: const RegistrationScreen(), 
+      home: RegistrationScreen(),  
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:luarsekolah/home_screen.dart';
 import 'register_screen.dart';
 import 'custom_field.dart'; 
 import 'package:luarsekolah/utils/storage_helper.dart';
+import 'route.dart'; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -55,9 +56,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // Navigasi ke Home / MainScreen
         Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MainScreenWithNavBar()),
-        );
+  context,
+  PageRouteBuilder(
+    transitionDuration: const Duration(milliseconds: 500), // durasi transisi
+    pageBuilder: (context, animation, secondaryAnimation) => const MainScreenWithNavBar(),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      // Contoh animasi: fade + slide dari kanan
+      const beginOffset = Offset(1.0, 0.0); // dari kanan
+      const endOffset = Offset.zero;
+      const curve = Curves.ease;
+
+      var tween = Tween(begin: beginOffset, end: endOffset).chain(CurveTween(curve: curve));
+      var fadeTween = Tween<double>(begin: 0.0, end: 1.0);
+
+      return SlideTransition(
+        position: animation.drive(tween),
+        child: FadeTransition(
+          opacity: animation.drive(fadeTween),
+          child: child,
+        ),
+      );
+    },
+  ),
+);
+
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Email atau Password salah')),

@@ -291,7 +291,7 @@ _passwordController.addListener(_updateButtonState);
 
                 const SizedBox(height: 20),
 
-                // ---------- Simulasi reCAPTCHA sebagai Checkbox ----------
+                //  Simulasi reCAPTCHA sebagai Checkbox 
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(

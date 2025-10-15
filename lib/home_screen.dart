@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-
-
-// Import yang benar (asumsi file ProfileFormScreen ada di folder screens/)
-
-import 'screens/profile_form_screen.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'route.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,51 +10,50 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
   final Color primaryGreen = const Color.fromRGBO(7, 126, 96, 1);
 
   final List<String> bannerImages = [
     'assets/banner.png',
+    'assets/bannercar1.jpg',
+    'assets/bannercar2.jpg',
   ];
 
-  // Fungsi yang menangani tap pada BottomNavigationBar
-  void _onItemTapped(int index) {
-    // ⚠️ Catatan: BottomNavigationBar Anda memiliki 5 item (index 0 sampai 4).
-    // Tab 'Akun' adalah item terakhir, yaitu index 4.
-    if (index == 4) { // Index 4 adalah tab 'Akun' (sesuai susunan items)
-      // Navigasi ke ProfileFormScreen
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ProfileFormScreen()),
-      );
-    } else {
-      // Untuk tab lainnya, ubah index yang dipilih dan biarkan Body content yang berubah
-      setState(() {
-        _selectedIndex = index;
-        // NOTE: Saat ini content Body TIDAK berubah, tapi ini adalah pola yang benar.
-      });
-    }
-  }
 
-
-  // 	Helper Widgets 
+  //  Helper Widgets 
 
   Widget _buildBanner() {
     return Container(
-      height: 150,
       margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
-      child: PageView.builder(
+      // Tinggi Container sekarang akan dikontrol oleh opsi CarouselOptions
+      // sehingga widget Container di luar CarouselSlider tidak perlu height, 
+      child: CarouselSlider.builder(
         itemCount: bannerImages.length,
-        itemBuilder: (context, index) {
+        itemBuilder: (context, index, realIndex) {
+          // Konten yang ditampilkan di setiap slide
           return Container(
+            width: MediaQuery.of(context).size.width,
             margin: const EdgeInsets.symmetric(horizontal: 4),
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                image: DecorationImage(
-                    image: AssetImage(bannerImages[index]), fit: BoxFit.cover)),
+              borderRadius: BorderRadius.circular(10),
+              image: DecorationImage(
+                // Menggunakan AssetImage dengan path dari List Anda
+                image: AssetImage(bannerImages[index]), 
+                fit: BoxFit.cover,
+              ),
+            ),
           );
         },
+        options: CarouselOptions(
+          height: 150.0, // Set tinggi banner
+          // --- Setting Auto-Scroll ---
+          autoPlay: true, // ✅ Geser otomatis diaktifkan
+          autoPlayInterval: const Duration(seconds: 3), // ⏰ Geser setiap 3 detik
+          // Jika Anda ingin 2 detik, ganti menjadi Duration(seconds: 2)
+          autoPlayAnimationDuration: const Duration(milliseconds: 800),
+          autoPlayCurve: Curves.fastOutSlowIn,
+          enableInfiniteScroll: true, // Berputar tanpa henti (looping)
+          viewportFraction: 1.0, // Pastikan setiap banner mengambil lebar penuh
+        ),
       ),
     );
   }
@@ -150,9 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildVoucherInputCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      // Removed redundant margin: const EdgeInsets.symmetric(horizontal: 20),
-      // as it's already wrapped in a Padding with 20.0 horizontal.
+      padding: const EdgeInsets.all(16), 
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -483,6 +477,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
+      // Halaman Home akan menjadi Body di MainScreenWithNavBar, sehingga hanya perlu kontennya.
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverAppBar(
@@ -565,7 +560,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildVoucherInputCard(),
                   const SizedBox(height: 20),
 
-                  // 	Kelas Terpopuler 
+                  //  Kelas Terpopuler 
                   const Text('Kelas Terpopuler di Prakerja',
                       style: TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 18)),
@@ -600,7 +595,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // ===== Akses Semua Kelas (Card seperti kelas) =====
+                 
                   const Text('Akses Semua Kelas dengan Berlangganan',
                       style: TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 18)),
@@ -635,11 +630,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // ===== Banner Magang =====
+                  // Banner Magang 
                   _buildMagangBanner(),
                   const SizedBox(height: 24),
 
-                  // ===== Batch Maret (Card seperti kelas) =====
+                  //  Batch Maret (Card seperti kelas) 
                   const Text('Batch Maret (2 bulan)',
                       style: TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 18)),
@@ -662,8 +657,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
 
                   const SizedBox(height: 24),
-
-                  // ===== Artikel =====
                   const Text('Artikel',
                       style: TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 18)),
@@ -698,44 +691,7 @@ class _HomeScreenState extends State<HomeScreen> {
             )
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: primaryGreen, // ini bisa tetap untuk label
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        onTap: _onItemTapped, // <-- Diubah untuk memanggil fungsi navigasi
-        items: [
-          BottomNavigationBarItem(
-            // backgroundColor: Color.fromRGBO(7, 126, 96, 1), // Ini tidak perlu di sini
-            icon: Image.asset('assets/beranda.png', width: 24, height: 24),
-            activeIcon:
-                Image.asset('assets/beranda.png', width: 24, height: 24),
-            label: 'Beranda',
-          ),
-          BottomNavigationBarItem(
-            icon: Image.asset('assets/kelas.png', width: 24, height: 24),
-            activeIcon: Image.asset('assets/kelas.png', width: 24, height: 24),
-            label: 'Kelas',
-          ),
-          BottomNavigationBarItem(
-            icon: Image.asset('assets/kelasku.png', width: 24, height: 24),
-            activeIcon:
-                Image.asset('assets/kelasku.png', width: 24, height: 24),
-            label: 'Kelasku',
-          ),
-          BottomNavigationBarItem(
-            icon: Image.asset('assets/akun.png', width: 24, height: 24),
-            activeIcon: Image.asset('assets/akun.png', width: 24, height: 24),
-            label: 'KoinLS', // Perhatikan, item ini adalah KoinLS (index 3)
-          ),
-          BottomNavigationBarItem(
-            icon: Image.asset('assets/koinls.png', width: 24, height: 24),
-            activeIcon: Image.asset('assets/koinls.png', width: 24, height: 24),
-            label: 'Akun', // Item ini adalah Akun (index 4)
-          ),
-        ],
-      ),
+      )
     );
   }
 }
