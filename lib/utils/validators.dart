@@ -39,4 +39,9 @@ class Validators {
     }
     return null;
   }
+  static String? requiredEnum(dynamic value, String fieldName) {
+  if (value == null) return '$fieldName is required.';
+  return null;
+}
+
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../profile_images_full_screen.dart';
 
 class ProfileFormScreen extends StatefulWidget {
   const ProfileFormScreen({super.key});
@@ -15,7 +16,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
 
- String? _selectedGender;
+  String? _selectedGender;
   String? _jobStatus;
 
   bool _isFormFilled = false;
@@ -27,27 +28,25 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   }
 
   Future<void> _loadSavedData() async {
-  final prefs = await SharedPreferences.getInstance();
-  setState(() {
-    _nameController.text = prefs.getString('userName') ?? '';
-    _dobController.text = prefs.getString('userDOB') ?? '';
-    _addressController.text = prefs.getString('userAddress') ?? '';
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _nameController.text = prefs.getString('userName') ?? '';
+      _dobController.text = prefs.getString('userDOB') ?? '';
+      _addressController.text = prefs.getString('userAddress') ?? '';
 
-    // Validasi gender
-    final genderFromPrefs = prefs.getString('userGender');
-    _selectedGender = (genderFromPrefs == 'Laki-laki' || genderFromPrefs == 'Perempuan')
-        ? genderFromPrefs
-        : null;
+      final genderFromPrefs = prefs.getString('userGender');
+      _selectedGender = (genderFromPrefs == 'Laki-laki' || genderFromPrefs == 'Perempuan')
+          ? genderFromPrefs
+          : null;
 
-    // Validasi job status
-    final jobFromPrefs = prefs.getString('userJobStatus');
-    _jobStatus = (jobFromPrefs != null &&
-            ["Pelajar", "Mahasiswa", "Karyawan", "Lainnya"].contains(jobFromPrefs))
-        ? jobFromPrefs
-        : null;
-  });
-  _checkFormFilled();
-}
+      final jobFromPrefs = prefs.getString('userJobStatus');
+      _jobStatus = (jobFromPrefs != null &&
+          ["Pelajar", "Mahasiswa", "Karyawan", "Lainnya"].contains(jobFromPrefs))
+          ? jobFromPrefs
+          : null;
+    });
+    _checkFormFilled();
+  }
 
   void _checkFormFilled() {
     setState(() {
@@ -92,15 +91,17 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
                 Row(
                   children: [
-                    ClipOval(
-                      child: Image.asset(
-                        'assets/nailong.jpg',
-                        width: 90,
-                        height: 90,
-                        fit: BoxFit.cover,
+                    Hero(
+                      tag: 'profile-image-hero-tag',
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/nailong.jpg',
+                          width: 90,
+                          height: 90,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 15),
@@ -128,51 +129,60 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 const SizedBox(height: 15),
 
                 Column(
-                   crossAxisAlignment: CrossAxisAlignment.start, 
-                    children: [
-                      ClipOval(
-                        child: Image.asset(
-                          'assets/nailong.jpg',
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.cover,
+                  crossAxisAlignment: CrossAxisAlignment.start, 
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProfileImageFullScreen(), 
+                          ),
+                        );
+                      },
+                      child: Hero(
+                        tag: 'profile-image-hero-tag',
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/nailong.jpg',
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Upload foto baru dengan ukuran <1 MB,\ndan bertipe JPG atau PNG.",
-                        textAlign: TextAlign.left,
-                        style: GoogleFonts.montserrat(fontSize: 15),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Upload foto baru dengan ukuran <1 MB,\ndan bertipe JPG atau PNG.",
+                      textAlign: TextAlign.left,
+                      style: GoogleFonts.montserrat(fontSize: 15),
+                    ),
+                    const SizedBox(height: 10),
+                    Center(
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.8, 
+                        
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                          },
+                          style: OutlinedButton.styleFrom(
+                            
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          icon: const Icon(Icons.image),
+                          label: Text(
+                            "Upload Foto",
+                            style: GoogleFonts.montserrat(),
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 10),
-                      Center(
-  child: SizedBox(
-    //agar lebar tombol menjadi 50% dari lebar layar
-    // bisa menyesuaikan nilai 0.5 di bawah ini.
-    width: MediaQuery.of(context).size.width * 0.8, 
-    
-    child: OutlinedButton.icon(
-      onPressed: () {
-        // Logika saat tombol ditekan
-      },
-      style: OutlinedButton.styleFrom(
-       
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10), // Ubah angka 10 untuk radius yang berbeda
-        ),
-        // Mengatur padding untuk ketinggian
-        padding: const EdgeInsets.symmetric(vertical: 12),
-      ),
-      icon: const Icon(Icons.image),
-      label: Text(
-        "Upload Foto",
-        style: GoogleFonts.montserrat(),
-      ),
-    ),
-  ),
-)
-                    ],
-                  ),
+                    )
+                  ],
+                ),
                 
 
                 const SizedBox(height: 20),
@@ -181,14 +191,12 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                         fontWeight: FontWeight.bold, fontSize: 14)),
                 const SizedBox(height: 10),
 
-                // Nama Lengkap
                 _buildTextField(
                   controller: _nameController,
                   label: "Nama Lengkap",
                   hint: "Masukkan nama lengkap",
                 ),
 
-                // Tanggal Lahir
                 _buildTextField(
                   controller: _dobController,
                   label: "Tanggal Lahir",
@@ -196,7 +204,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   icon: Icons.calendar_today,
                   onTap: () async {
                     FocusScope.of(context).requestFocus(FocusNode());
-                    DateTime? pickedDate = await showDatePicker( //buat milih tanggal 
+                    DateTime? pickedDate = await showDatePicker(
                       context: context, 
                       initialDate: DateTime.now(),
                       firstDate: DateTime(1900),
@@ -209,18 +217,16 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   },
                 ),
 
-                // Jenis Kelamin
                 _buildDropdownField(
                   label: "Jenis Kelamin",
                   value: _selectedGender,
                   items: const ["Laki-laki", "Perempuan"],
                   onChanged: (val) {
-                       setState(() => _selectedGender = val);
+                        setState(() => _selectedGender = val);
                     _checkFormFilled();
                   },
                 ),
 
-                // Status Pekerjaan
                 _buildDropdownField(
                   label: "Status Pekerjaan",
                   value: _jobStatus,
@@ -231,7 +237,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   },
                 ),
 
-                // Alamat Lengkap
                 _buildTextField(
                   controller: _addressController,
                   label: "Alamat Lengkap",
@@ -240,7 +245,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 ),
 
                 const SizedBox(height: 20),
-//button simpan perubahan 
                 ElevatedButton(
                   onPressed: _isFormFilled ? _saveProfile : null,
                   style: ElevatedButton.styleFrom(
@@ -263,7 +267,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     );
   }
 
-  // Text field builder
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -301,7 +304,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     );
   }
 
-  // Dropdown field builder
   Widget _buildDropdownField({
     required String label,
     required String? value,

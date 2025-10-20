@@ -34,8 +34,8 @@ class CustomBottomNavBar extends StatelessWidget {
       {'label': 'Kelas', 'asset': 'assets/kelas.png'},
       {'label': 'Kelasku', 'asset': 'assets/kelasku.png'},
       // HATI-HATI: Saya balik asset 'koinLS' dan 'Akun' agar sesuai urutan di bawah.
-      {'label': 'koinLS', 'asset': 'assets/koinls.png'},
-      {'label': 'Akun', 'asset': 'assets/akun.png'},
+      {'label': 'koinLS', 'asset': 'assets/akun.png'},
+      {'label': 'Akun', 'asset': 'assets/koinls.png'},
     ];
 
     return BottomNavigationBar(
@@ -77,7 +77,7 @@ class _MainScreenWithNavBarState extends State<MainScreenWithNavBar> {
 
   final List<Widget> _pages = const [
     HomeScreen(),
-    NestedScrollTabListPage(),
+    KelasPopulerScreen(),
     MyClassScreen(),
     CoinLSScreen(),
     ProfileFormScreen(),
