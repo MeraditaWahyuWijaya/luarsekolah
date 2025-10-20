@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:luarsekolah/home_screen.dart';
 import 'register_screen.dart';
-import 'custom_field.dart'; 
+import 'custom_field.dart';
 import 'package:luarsekolah/utils/storage_helper.dart';
-import 'route.dart'; 
+import 'route.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -32,10 +32,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
-  
-  // HANDLE LOGIN
- 
+
+  // HANDLE LOGIN (LOGIKA TELAH DIPERBAIKI)
   void _handleLogin() async {
+    // KOMENTAR: Pengecekan reCAPTCHA
     if (!_isRecaptchaVerified) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Harap verifikasi reCAPTCHA')));
@@ -43,46 +43,54 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     if (_formKey.currentState!.validate()) {
-      final user = await StorageHelper.getUserData();
-      print('Data user di login: $user');
-      if (_emailController.text == user['email'] &&
-          _passwordController.text == user['password']) {
+      // KOMENTAR: 1. Mengambil data registrasi dari SharedPreferences
+      final userData = await StorageHelper.getUserData();
+      final registeredEmail = userData['email'];
+      final registeredPassword = userData['password'];
+      
+      print('Data registrasi tersimpan: $userData');
+      print('Input Email: ${_emailController.text}');
+      print('Input Password: ${_passwordController.text}');
+
+      // KOMENTAR: 2. Membandingkan input dengan data tersimpan
+      if (_emailController.text == registeredEmail &&
+          _passwordController.text == registeredPassword) {
+
+        // KOMENTAR: Login Berhasil
+        await StorageHelper.saveLastEmail(_emailController.text);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login Berhasil')),
+          const SnackBar(content: Text('Login Berhasil 🎉')),
         );
 
-        // Simpan email terakhir untuk auto-fill login berikutnya
-        await StorageHelper.saveLastEmail(_emailController.text);
-
-        // Navigasi ke Home / MainScreen
+        // KOMENTAR: Navigasi ke Home dengan animasi PageRouteBuilder yang sudah Anda definisikan
         Navigator.pushReplacement(
-  context,
-  PageRouteBuilder(
-    transitionDuration: const Duration(milliseconds: 500), // durasi transisi
-    pageBuilder: (context, animation, secondaryAnimation) => const MainScreenWithNavBar(),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      // Contoh animasi: fade + slide dari kanan
-      const beginOffset = Offset(1.0, 0.0); // dari kanan
-      const endOffset = Offset.zero;
-      const curve = Curves.ease;
+          context,
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 500),
+            pageBuilder: (context, animation, secondaryAnimation) => const MainScreenWithNavBar(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              const beginOffset = Offset(1.0, 0.0);
+              const endOffset = Offset.zero;
+              const curve = Curves.ease;
 
-      var tween = Tween(begin: beginOffset, end: endOffset).chain(CurveTween(curve: curve));
-      var fadeTween = Tween<double>(begin: 0.0, end: 1.0);
+              var tween = Tween(begin: beginOffset, end: endOffset).chain(CurveTween(curve: curve));
+              var fadeTween = Tween<double>(begin: 0.0, end: 1.0);
 
-      return SlideTransition(
-        position: animation.drive(tween),
-        child: FadeTransition(
-          opacity: animation.drive(fadeTween),
-          child: child,
-        ),
-      );
-    },
-  ),
-);
+              return SlideTransition( //EFEK DARI PENERAPAN WEEK 05 MENERAPKAN ANIMASI 
+                position: animation.drive(tween),
+                child: FadeTransition(
+                  opacity: animation.drive(fadeTween),
+                  child: child,
+                ),
+              );
+            },
+          ),
+        );
 
       } else {
+        // KOMENTAR: Login Gagal (Email/Password salah)
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email atau Password salah')),
+          const SnackBar(content: Text('Email atau Password salah. Coba lagi.')),
         );
       }
     }
@@ -103,17 +111,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
   // LOAD LAST EMAIL
- 
   void loadLastEmail() async {
     final lastEmail = await StorageHelper.getLastEmail();
-     print('Email terakhir dari SharedPreferences: $lastEmail');
+      print('Email terakhir dari SharedPreferences: $lastEmail');
     setState(() {
-      _emailController.text = lastEmail; // auto-fill email
+      // KOMENTAR: Auto-fill email saat halaman dimuat
+      _emailController.text = lastEmail ?? '';
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    // Sisa dari Widget build tidak ada perubahan karena UI tidak diubah
     return Scaffold(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
