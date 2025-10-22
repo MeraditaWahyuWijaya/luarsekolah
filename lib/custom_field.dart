@@ -65,7 +65,7 @@ class MainScreenWithNavBar extends StatefulWidget {
 
   const MainScreenWithNavBar({
     super.key,
-    this.initialIndex = 4,
+    this.initialIndex = 0,
   });
 
   @override

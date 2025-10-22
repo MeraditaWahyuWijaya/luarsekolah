@@ -97,12 +97,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       );
 
       // 1. Simpan data pengguna lengkap ke SharedPreferences
-      // KOMENTAR: PENTING! Pastikan password diikutkan dalam penyimpanan.
+      // password diikutkan dalam penyimpanan.
       await StorageHelper.saveUserData(
         email: _emailController.text,
         name: _nameController.text,
         phone: _phoneController.text,
-        password: _passwordController.text, // <--- DATA PENTING AGAR LOGIN BERHASIL
+        password: _passwordController.text, // DATA PENTING AGAR LOGIN BERHASIL
         address: null,
         gender: null,
         jobStatus: null,
@@ -115,7 +115,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       bool registrationSuccess = true;
 
       if (registrationSuccess) {
-        // KOMENTAR: Update state untuk berpindah ke tampilan Verifikasi
+        // Update state untuk berpindah ke tampilan Verifikasi
         setState(() {
           _registeredEmail = _emailController.text;
           _currentPageIndex = 1; 
@@ -124,18 +124,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
   }
 
-  // LOGIKA BARU: Fungsi untuk Navigasi ke Halaman Login
+  // Fungsi untuk Navigasi ke Halaman Login
   void _navigateToLogin() {
-    // KOMENTAR: Navigasi ke halaman Login setelah konfirmasi email terkirim
-    Navigator.pushReplacement(
+    // Navigasi ke halaman Login setelah konfirmasi email terkirim //IMPLEMENTASI WEEK05
+    Navigator.pushReplacementNamed(
       context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      AppRoutes.login,
     );
   }
 
 
   Widget _buildValidationItem(String text, bool isValid) {
-    // ... (Tidak ada perubahan)
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
@@ -159,7 +158,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
-  // LOGIKA BARU: WIDGET UNTUK TAMPILAN VERIFIKASI (Index 1)
+
   Widget _buildVerificationForm(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -241,13 +240,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
 
-  // LOGIKA ASLI: WIDGET UNTUK TAMPILAN REGISTRASI (Index 0)
+  //WIDGET UNTUK TAMPILAN REGISTRASI (Index 0)
   Widget _buildRegistrationFields(bool isPhoneAllValid, bool isPasswordAllValid) {
-    // ... (Tidak ada perubahan UI)
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ... (UI Elements)
         const SizedBox(height: 3),
         Image.asset('assets/luarsekolahlogo.png', height: 40),
         const SizedBox(height: 10),
@@ -513,10 +510,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         // Bagian Sudah Punya Akun
         Center(
           child: InkWell( 
-            onTap: () {
-              Navigator.push( //IMPLEMENTASI WEEK05 ANIMATED DENGAN SCALE JUGA DI BAGIAN LOGIN 
-                context,
-                ScalePageRoute(child: const LoginScreen()),
+            onTap: () { 
+              Navigator.pushNamed( //IMPLEMENTASI WEEK05 ANIMATED DENGAN SCALE JUGA DI BAGIAN LOGIN 
+                context, //dengan named route nantinya akan muncul animasi
+                AppRoutes.login,
               );
             },
             child: Container(

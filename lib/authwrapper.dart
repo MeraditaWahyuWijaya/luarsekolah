@@ -3,7 +3,7 @@ import 'package:luarsekolah/utils/storage_helper.dart';
 import 'package:luarsekolah/utils/storage_keys.dart';     
 import 'package:luarsekolah/login_screen.dart';     
 import 'package:luarsekolah/screens/profile_form_screen.dart';
-
+import 'custom_field.dart'; 
 
 
 const Color _kGreen = Color.fromRGBO(7, 126, 96, 1); 
@@ -31,7 +31,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     
     
     if (isUserLoggedIn) {
-      _nextScreen = const ProfileFormScreen();
+      _nextScreen = const MainScreenWithNavBar();
     } else {
      
       _nextScreen = LoginScreen();

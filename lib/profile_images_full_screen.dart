@@ -10,7 +10,6 @@ class ProfileImageFullScreen extends StatelessWidget {
       backgroundColor: Colors.black, 
       
       appBar: AppBar(
-        // Buat AppBar transparan dan tidak berbayang
         backgroundColor: Colors.transparent,
         elevation: 0,
         // Atur warna ikon (tombol back) menjadi putih
@@ -26,7 +25,6 @@ class ProfileImageFullScreen extends StatelessWidget {
           // Memuat gambar yang sama di tengah layar
           child: Image.asset(
             'assets/nailong.jpg', 
-            // Mengatur gambar agar mengisi ruang sebanyak mungkin tanpa terpotong
             fit: BoxFit.contain, 
           ),
         ),
