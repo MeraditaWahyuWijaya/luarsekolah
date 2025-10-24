@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:luarsekolah/login_screen.dart';
+import 'package:luarsekolah/login_screen.dart'; 
 import 'package:luarsekolah/main.dart'; 
 import 'package:luarsekolah/utils/storage_helper.dart';
 import 'route.dart';
+import '../services/api_service.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -18,6 +19,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  
+  final ApiService _apiService = ApiService(); //ini api nya 
+  bool _isLoading = false; 
+
   String? _recaptchaToken;
   bool _isRecaptchaVerified = false;
 
@@ -27,12 +32,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   bool _isPasswordVisible = false;
   bool isFormValid = false;
 
-  // State untuk Validasi Password
   bool hasMinLength = false;
   bool hasUppercase = false;
   bool hasNumberOrSymbol = false;
 
-  // State untuk Validasi WA
   bool waValidFormat = false;
   bool waMinLength = false;
 
@@ -67,7 +70,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           _emailController.text.isNotEmpty &&
           _emailController.text.contains('@') &&
           isPhoneAllValid &&
-          isPasswordAllValid; // Menggunakan variabel boolean validasi
+          isPasswordAllValid;
     });
   }
 
@@ -89,44 +92,49 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     });
   }
 
-  // LOGIKA BARU: Fungsi untuk menangani Registrasi
   void _handleRegistration(BuildContext context) async {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mendaftarkan Akunmu & Mengirim Verifikasi...')),
-      );
+    if (_formKey.currentState!.validate() && _isRecaptchaVerified) {
+      setState(() {
+        _isLoading = true;
+      });
 
-      // 1. Simpan data pengguna lengkap ke SharedPreferences
-      // password diikutkan dalam penyimpanan.
-      await StorageHelper.saveUserData(
-        email: _emailController.text,
-        name: _nameController.text,
-        phone: _phoneController.text,
-        password: _passwordController.text, // DATA PENTING AGAR LOGIN BERHASIL
-        address: null,
-        gender: null,
-        jobStatus: null,
-        dob: null,
-      );
-      
-      // 2. Simpan email terakhir (untuk auto-fill di login)
-      await StorageHelper.saveLastEmail(_emailController.text);
+      try {
+        await _apiService.signUp(
+          name: _nameController.text,
+          email: _emailController.text,
+          phone: _phoneController.text,
+          password: _passwordController.text,
+        );
 
-      bool registrationSuccess = true;
+        await StorageHelper.saveLastEmail(_emailController.text);
 
-      if (registrationSuccess) {
-        // Update state untuk berpindah ke tampilan Verifikasi
         setState(() {
           _registeredEmail = _emailController.text;
           _currentPageIndex = 1; 
         });
+
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Registrasi Gagal: ${e.toString().replaceFirst('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
       }
+    } else {
+       if (!_isRecaptchaVerified) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text('Harap verifikasi reCAPTCHA')),
+         );
+       }
     }
   }
 
-  // Fungsi untuk Navigasi ke Halaman Login
   void _navigateToLogin() {
-    // Navigasi ke halaman Login setelah konfirmasi email terkirim //IMPLEMENTASI WEEK05
     Navigator.pushReplacementNamed(
       context,
       AppRoutes.login,
@@ -222,7 +230,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           width: double.infinity,
           height: 50,
           child: OutlinedButton(
-            onPressed: _navigateToLogin, // Pindah ke halaman Login
+            onPressed: _navigateToLogin, 
             style: OutlinedButton.styleFrom(
               shape: const StadiumBorder(), 
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
@@ -240,7 +248,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
 
-  //WIDGET UNTUK TAMPILAN REGISTRASI (Index 0)
   Widget _buildRegistrationFields(bool isPhoneAllValid, bool isPasswordAllValid) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,7 +264,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 fontSize: 14, color: Colors.grey)),
         const SizedBox(height: 24),
 
-        // Tombol Daftar dengan Google
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
@@ -284,7 +290,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         ),
         const SizedBox(height: 20),
         
-        // Divider
         Row(
           children: [
             const Expanded(
@@ -303,7 +308,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         ),
         const SizedBox(height: 20),
 
-        // Nama
         TextFormField(
             controller: _nameController,
           decoration: InputDecoration(
@@ -317,7 +321,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         ),
         const SizedBox(height: 20),
 
-        // Email
         TextFormField(
             controller: _emailController,
           keyboardType: TextInputType.emailAddress,
@@ -334,7 +337,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         ),
         const SizedBox(height: 20),
 
-        // Nomor WA
         TextFormField(
           controller: _phoneController,
           keyboardType: TextInputType.phone,
@@ -364,7 +366,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
         const SizedBox(height: 20),
 
-        // Password
         TextFormField(
           controller: _passwordController,
           obscureText: !_isPasswordVisible,
@@ -412,7 +413,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
         const SizedBox(height: 20),
 
-        // Simulasi reCAPTCHA sebagai Checkbox
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
@@ -422,7 +422,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           ),
           child: Row(
             children: [
-              // Checkbox
               Checkbox(
                 value: _isRecaptchaVerified,
                 onChanged: (value) {
@@ -434,7 +433,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 },
               ),
 
-              // Label teks
               Expanded(
                 child: Text(
                   "I'm not a robot",
@@ -446,7 +444,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ),
               ),
 
-              // Logo reCAPTCHA
               Image.asset(
                 'assets/recaptcha.png',
                 height: 50,
@@ -459,14 +456,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
         const SizedBox(height: 45),
 
-        // Tombol Daftar
         SizedBox(
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: isFormValid ? () => _handleRegistration(context) : null,
+            onPressed: (isFormValid && !_isLoading) ? () => _handleRegistration(context) : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: isFormValid
+              backgroundColor: isFormValid && !_isLoading
                   ? const Color.fromRGBO(7, 126, 96, 1.0)
                   : Colors.grey,
               foregroundColor: Colors.white,
@@ -475,18 +471,26 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               elevation: 2,
             ),
-            child: Text(
-              'Daftarkan Akun',
-              style: GoogleFonts.montserrat(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            child: _isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator( //tugas week05 loading
+                      color: Colors.white,
+                      strokeWidth: 3,
+                    ),
+                  )
+                : Text(
+                    'Daftarkan Akun',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
           ),
         ),
         const SizedBox(height: 16),
         
-        // Bagian RichText (Syarat & Ketentuan)
         RichText(
           text: TextSpan(
             style: GoogleFonts.montserrat(
@@ -507,12 +511,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         ),
         const SizedBox(height: 24),
 
-        // Bagian Sudah Punya Akun
         Center(
           child: InkWell( 
             onTap: () { 
-              Navigator.pushNamed( //IMPLEMENTASI WEEK05 ANIMATED DENGAN SCALE JUGA DI BAGIAN LOGIN 
-                context, //dengan named route nantinya akan muncul animasi
+              Navigator.pushNamed( 
+                context, 
                 AppRoutes.login,
               );
             },
@@ -565,7 +568,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               duration: const Duration(milliseconds: 400),
               transitionBuilder: (Widget child, Animation<double> animation) {
                 return ScaleTransition(
-                scale: animation, // IMPLEMENTASI ANIMATION SCALE WEEK05
+                scale: animation, 
                 child: child,);
               },
               child: Container(

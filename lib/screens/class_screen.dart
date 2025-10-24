@@ -29,7 +29,7 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
   Map<String, dynamic>? _classToEdit;
 
   late Future<List<Map<String, dynamic>>> _futureClasses;
-  List<Map<String, dynamic>> _fetchedClasses = [];
+  List<Map<String, dynamic>> _allClasses = [];
 
   @override
   void initState() {
@@ -39,18 +39,23 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
 
   void _fetchData() {
     setState(() {
-      _futureClasses = _apiService.fetchClasses();
+      _futureClasses = _apiService.fetchCourses().then((data) {
+        _allClasses = data;
+        return data;
+      });
     });
   }
 
   List<Map<String, dynamic>> get _filteredClasses {
-    return _fetchedClasses
+    return _allClasses
         .where((kelas) {
-          final id = int.tryParse(kelas['id'].toString()) ?? 0;
-          final category = (id % 2 == 0 || kelas['categoryTag']?.contains(ClassCategory.populer.toString()) == true)
-              ? ClassCategory.populer
-              : ClassCategory.spl;
-          return category == _selectedCategory;
+          final categoryTag = kelas['category']?.toString().toLowerCase() ?? '';
+          
+          if (_selectedCategory == ClassCategory.populer) {
+            return categoryTag.contains('populer') || categoryTag.contains('umum');
+          } else {
+            return categoryTag.contains('spl') || categoryTag.contains('spesial');
+          }
         })
         .toList();
   }
@@ -81,32 +86,18 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
 
   Future<void> _submitAddClass(Map<String, dynamic> formData) async {
     try {
-      final List<dynamic>? selectedImages = formData['imageAsset'];
-      String? imageUrl;
-
-      if (selectedImages != null && selectedImages.isNotEmpty) {
-        final selectedImage = selectedImages.first;
-        if (selectedImage is File) {
-          imageUrl = selectedImage.path;
-        }
-      }
+      final String thumbnailUrl = 'https://picsum.photos/300/200?random=${DateTime.now().millisecondsSinceEpoch}';
 
       await _apiService.createCourse(
-        formData['title'],
-        formData['price'],
-        formData['category'].toString(), 
-        imageUrl ?? 'https://example.com/default-thumbnail.jpg',
+        name: formData['title'],
+        price: formData['price'],
+        category: formData['category'].toString().split('.').last,
+        thumbnailUrl: thumbnailUrl,
       );
 
+      _fetchData();
+
       setState(() {
-        final newId = DateTime.now().millisecondsSinceEpoch.toString();
-        _fetchedClasses.add({
-          'id': newId,
-          'name': formData['title'],
-          'price': formData['price'],
-          'categoryTag': [formData['category'].toString()],
-          'thumbnail': imageUrl,
-        });
         _isFormVisible = false;
       });
 
@@ -115,24 +106,24 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menambah kelas: $e')),
+        SnackBar(content: Text('Gagal menambah kelas: ${e.toString().replaceFirst('Exception: ', '')}')),
       );
     }
   }
 
-  Future<void> _deleteClass(String classId, String classTitle) async {
+  Future<void> _deleteClass(String classId, String? classTitle) async {
     final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Konfirmasi Hapus'),
-        content: Text('Anda yakin ingin menghapus kelas "$classTitle"?'),
+        title: const Text('Konfirmasi Hapus'),
+        content: Text('Anda yakin ingin menghapus kelas "${classTitle ?? 'ini'}"?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Batal')),
+              child: const Text('Batal')),
           ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text('Hapus')),
+              child: const Text('Hapus')),
         ],
       ),
     );
@@ -140,16 +131,14 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
     try {
       await _apiService.deleteCourse(classId);
 
-      setState(() {
-        _fetchedClasses.removeWhere((kelas) => kelas['id'].toString() == classId);
-      });
+      _fetchData();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kelas "$classTitle" berhasil dihapus!')),
+        SnackBar(content: Text('Kelas "${classTitle ?? 'Kelas'}" berhasil dihapus!')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menghapus kelas: ${e.toString()}')),
+        SnackBar(content: Text('Gagal menghapus kelas: ${e.toString().replaceFirst('Exception: ', '')}')),
       );
     }
   }
@@ -157,39 +146,29 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
   Future<void> _submitEditClass(Map<String, dynamic> formData) async {
     if (_classToEdit == null) return;
     
-    // Perbaikan: Pastikan ID diambil dengan aman sebagai String
     final String idToEdit = _classToEdit!['id']?.toString() ?? '';
     
     if (idToEdit.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengedit: ID kelas tidak ditemukan.')),
+          const SnackBar(content: Text('Gagal mengedit: ID kelas tidak ditemukan.')),
         );
         return;
     }
     
-    final String? oldThumbnail = _classToEdit!['thumbnail']?.toString(); 
+    final String oldThumbnail = _classToEdit!['thumbnailUrl']?.toString() ?? 'https://example.com/default-thumbnail.jpg';
 
     try {
       await _apiService.updateCourse(
-        id: idToEdit,
+        courseId: idToEdit,
         name: formData['title'],
         price: formData['price'],
-        category: formData['category'].toString(),
-        thumbnailUrl: oldThumbnail ?? 'https://example.com/default-thumbnail.jpg',
-        rating: double.tryParse(formData['rating'].toString()) ?? 4.5,
+        category: formData['category'].toString().split('.').last,
+        thumbnailUrl: oldThumbnail,
       );
 
+      _fetchData();
+
       setState(() {
-        final index =
-            _fetchedClasses.indexWhere((kelas) => kelas['id'].toString() == idToEdit);
-        if (index != -1) {
-          _fetchedClasses[index] = {
-            ..._fetchedClasses[index],
-            'name': formData['title'],
-            'price': formData['price'], 
-            'categoryTag': [formData['category'].toString()],
-          };
-        }
         _isFormVisible = false;
         _isEditMode = false;
         _classToEdit = null;
@@ -199,32 +178,16 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengedit kelas: ${e.toString()}')),
+        SnackBar(content: Text('Gagal mengedit kelas: ${e.toString().replaceFirst('Exception: ', '')}')),
       );
     }
   }
 
   String _formatClassPrice(Map<String, dynamic> classData) {
-    if (classData['price'] != null) {
-        final price = classData['price'].toString().replaceAll('.', '').replaceAll(',', '').trim();
-        if (double.tryParse(price) != null) {
-            return 'Harga: Rp $price'; 
-        }
+    final priceValue = classData['price']?.toString() ?? '0';
+    if (int.tryParse(priceValue) != null) {
+      return 'Harga: Rp ${priceValue.toString()}';
     }
-    
-    final id = int.tryParse(classData['id'].toString()) ?? 0;
-    
-    if (classData['body'] is String && classData['body'].contains('Harga Kelas:')) {
-        final bodyText = classData['body'] as String;
-        final priceValue = bodyText.replaceFirst('Harga Kelas:', '').trim();
-        return 'Harga: Rp $priceValue';
-    }
-
-    if (id <= 10 && id > 0) {
-        final simulatedPrice = id * 50000;
-        return 'Harga: Rp ${simulatedPrice.toString()}'; 
-    }
-
     return 'Harga: Tidak Diketahui';
   }
 
@@ -244,7 +207,9 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
         : '';
 
     final ClassCategory initialCategory = isEditing
-        ? (_classToEdit!['category'] as ClassCategory? ?? ClassCategory.populer)
+        ? (_classToEdit!['category']?.toString().toLowerCase().contains('spl') == true 
+            ? ClassCategory.spl 
+            : ClassCategory.populer)
         : ClassCategory.populer;
         
     final Map<String, dynamic>? initialValues = isEditing
@@ -473,7 +438,7 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
                     child: Padding(
                       padding: const EdgeInsets.only(top: 50.0),
                       child: Text(
-                        'Gagal memuat data dari API: \n${snapshot.error}',
+                        'Gagal memuat data: \n${snapshot.error.toString().replaceFirst('Exception: ', '')}',
                         style: GoogleFonts.montserrat(
                             color: Colors.red, fontWeight: FontWeight.w500),
                         textAlign: TextAlign.center,
@@ -481,8 +446,6 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
                     ),
                   );
                 } else if (snapshot.hasData) {
-                  _fetchedClasses = snapshot.data!;
-
                   if (_filteredClasses.isEmpty) {
                     return Center(
                       child: Padding(
@@ -503,8 +466,8 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
                               classData: classData,
                               title: classData['name'] ?? classData['title'] ?? 'Judul Tidak Tersedia',
                               price: _formatClassPrice(classData),
-                              tags: const ['API', 'Prakerja'],
-                              imagePath: classData['thumbnail'] ?? 'assets/pengolahansampah.png',
+                              tags: [classData['category']?.toString() ?? 'General', 'API'],
+                              imagePath: classData['thumbnailUrl'] ?? classData['thumbnail'] ?? 'assets/pengolahansampah.png',
                               onMenuSelected: (result) =>
                                   _handleMenuItemSelected(result, classData),
                             ),
@@ -561,6 +524,16 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
           fit: BoxFit.cover,
         );
       }
+      if (imagePath.startsWith('http')) {
+        return Image.network(
+          imagePath,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Container(
+            color: Colors.grey[300],
+            child: const Icon(Icons.broken_image, color: Colors.white),
+          ),
+        );
+      }
       try {
         final File imageFile = File(imagePath);
         if (imageFile.existsSync()) {
@@ -593,21 +566,14 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
               fit: StackFit.expand,
               children: [
                 _getImageWidget(),
-                Positioned(
+                const Positioned(
                   top: 5,
                   right: 5,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Icon(
+                  child: Icon(
                       Icons.online_prediction,
                       color: Colors.white,
                       size: 16,
                     ),
-                  ),
                 ),
                 const Positioned(
                   bottom: 0,
@@ -704,7 +670,7 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
   }
 
   Widget _buildTag(String tag) {
-    bool isSPL = tag == 'SPL';
+    bool isSPL = tag.toUpperCase().contains('SPL');
     return Padding(
       padding: const EdgeInsets.only(right: 8.0),
       child: Container(

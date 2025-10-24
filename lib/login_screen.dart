@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:luarsekolah/home_screen.dart';
 import 'register_screen.dart';
-import 'custom_field.dart';
 import 'package:luarsekolah/utils/storage_helper.dart';
 import 'route.dart';
+import '../services/api_service.dart';
+import 'package:luarsekolah/custom_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +18,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  
+  final ApiService _apiService = ApiService();
+  bool _isLoading = false;
 
   bool _isPasswordVisible = false;
   bool _isRecaptchaVerified = false;
@@ -32,10 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
-
-  // HANDLE LOGIN (LOGIKA TELAH DIPERBAIKI)
   void _handleLogin() async {
-    // KOMENTAR: Pengecekan reCAPTCHA
     if (!_isRecaptchaVerified) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Harap verifikasi reCAPTCHA')));
@@ -43,26 +44,22 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     if (_formKey.currentState!.validate()) {
-      // KOMENTAR: 1. Mengambil data registrasi dari SharedPreferences
-      final userData = await StorageHelper.getUserData();
-      final registeredEmail = userData['email'];
-      final registeredPassword = userData['password'];
-      
-      print('Data registrasi tersimpan: $userData');
-      print('Input Email: ${_emailController.text}');
-      print('Input Password: ${_passwordController.text}');
+      setState(() {
+        _isLoading = true;
+      });
 
-      // KOMENTAR: 2. Membandingkan input dengan data tersimpan
-      if (_emailController.text == registeredEmail &&
-          _passwordController.text == registeredPassword) {
+      try {
+        await _apiService.signIn(
+          _emailController.text, 
+          _passwordController.text
+        );
 
-        // KOMENTAR: Login Berhasil
         await StorageHelper.saveLastEmail(_emailController.text);
+        
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login Berhasil 🎉')),
         );
 
-        // KOMENTAR: Navigasi ke Home dengan animasi PageRouteBuilder yang sudah Anda definisikan
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
@@ -76,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
               var tween = Tween(begin: beginOffset, end: endOffset).chain(CurveTween(curve: curve));
               var fadeTween = Tween<double>(begin: 0.0, end: 1.0);
 
-              return SlideTransition( //EFEK DARI PENERAPAN WEEK 05 MENERAPKAN ANIMASI 
+              return SlideTransition(
                 position: animation.drive(tween),
                 child: FadeTransition(
                   opacity: animation.drive(fadeTween),
@@ -86,12 +83,17 @@ class _LoginScreenState extends State<LoginScreen> {
             },
           ),
         );
-
-      } else {
-        // KOMENTAR: Login Gagal (Email/Password salah)
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email atau Password salah. Coba lagi.')),
+          SnackBar(
+            content: Text('Login Gagal: ${e.toString().replaceFirst('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
         );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -109,20 +111,15 @@ class _LoginScreenState extends State<LoginScreen> {
     loadLastEmail();
   }
 
-
-  // LOAD LAST EMAIL
   void loadLastEmail() async {
     final lastEmail = await StorageHelper.getLastEmail();
-      print('Email terakhir dari SharedPreferences: $lastEmail');
     setState(() {
-      // KOMENTAR: Auto-fill email saat halaman dimuat
       _emailController.text = lastEmail ?? '';
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Sisa dari Widget build tidak ada perubahan karena UI tidak diubah
     return Scaffold(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -146,7 +143,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Email
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -163,7 +159,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Password
               TextFormField(
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
@@ -190,7 +185,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-              // RECAPTCHA MANUAL
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -229,13 +223,11 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Tombol Login
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed:
-                      _isRecaptchaVerified ? _handleLogin : null, // nonaktif kalau belum dicentang
+                  onPressed: (_isRecaptchaVerified && !_isLoading) ? _handleLogin : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromRGBO(7, 126, 96, 1.0),
                     foregroundColor: Colors.white,
@@ -243,16 +235,24 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(12)),
                     elevation: 2,
                   ),
-                  child: Text(
-                    'Masuk',
-                    style: GoogleFonts.montserrat(
-                        fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
+                  child: _isLoading 
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        )
+                      : Text(
+                        'Masuk',
+                        style: GoogleFonts.montserrat(
+                            fontSize: 16, fontWeight: FontWeight.w500),
+                      ),
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Tombol ke Register
               Center(
                 child: InkWell(
                   onTap: () {
