@@ -10,9 +10,6 @@ class AppRoutes {
   static const page2 = '/page2'; // Nama rute untuk halaman tujuan
 }
 
-// Tidak perlu PageRouteBuilder kustom lagi, karena logikanya akan di-injeksi
-// langsung di onGenerateRoute. Namun, bisa tetap menggunakan logika transisinya.
-
 Route<dynamic> onAppGenerateRoute(RouteSettings settings) {
   switch (settings.name) {
     

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:luarsekolah/home_screen.dart';
 import 'register_screen.dart';
 import 'package:luarsekolah/utils/storage_helper.dart';
-import 'route.dart';
 import '../services/api_service.dart';
 import 'package:luarsekolah/custom_field.dart';
 
@@ -19,8 +17,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   
-  final ApiService _apiService = ApiService();
-  bool _isLoading = false;
+  final ApiService _apiService = ApiService(); // ambil data api_Service.dart
+  bool _isLoading = false; //kenapa false, karena nanti akan berubah jadi true ketika api jalan dan kemblai false lagi
 
   bool _isPasswordVisible = false;
   bool _isRecaptchaVerified = false;
@@ -49,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        await _apiService.signIn(
+        await _apiService.signIn( //API 
           _emailController.text, 
           _passwordController.text
         );
@@ -60,9 +58,10 @@ class _LoginScreenState extends State<LoginScreen> {
           const SnackBar(content: Text('Login Berhasil 🎉')),
         );
 
-        Navigator.pushReplacement(
+       Navigator.pushAndRemoveUntil(
           context,
           PageRouteBuilder(
+            settings: const RouteSettings(name: '/main'),
             transitionDuration: const Duration(milliseconds: 500),
             pageBuilder: (context, animation, secondaryAnimation) => const MainScreenWithNavBar(),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -82,7 +81,8 @@ class _LoginScreenState extends State<LoginScreen> {
               );
             },
           ),
-        );
+        (Route<dynamic> route) => false,
+       );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'route.dart';
 import 'utils/hover_card.dart';
 
 class HomeScreen extends StatefulWidget {
