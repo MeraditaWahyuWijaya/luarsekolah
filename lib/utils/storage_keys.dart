@@ -14,6 +14,7 @@ class StorageKeys {
  static const String userJobStatus = 'userJobStatus';
  static const String userDOB = 'userDOB'; // Date of Birth
 static const userPassword = 'user_password';
+static const String accessToken = 'auth_access_token'; 
 
  // Tambahkan konstanta lain jika diperlukan di masa depan
  // static const String userId = 'userId';

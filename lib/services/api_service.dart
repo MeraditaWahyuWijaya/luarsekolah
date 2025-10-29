@@ -1,24 +1,39 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:luarsekolah/utils/storage_helper.dart';
 
 class ApiService {
+  static final ApiService _instance = ApiService._internal();
+
+  factory ApiService() {
+    return _instance;
+  }
+
+  ApiService._internal();
+
   final String _baseUrl = 'https://ls-lms.zoidify.my.id/api';
   final String _apiUrlV1 = 'https://ls-lms.zoidify.my.id/api/v1';
 
   String? _accessToken;
-  String? get accessToken => _accessToken;
 
-  Map<String, String> get _authHeaders {
+  Future<void> initializeToken() async {
+    _accessToken ??= await StorageHelper.getAccessToken();
+  }
+
+  Future<Map<String, String>> getAuthHeaders() async { 
+    _accessToken ??= await StorageHelper.getAccessToken();
+
     if (_accessToken == null) {
       throw Exception('Akses ditolak. Mohon login terlebih dahulu.');
     }
+    
     return {
       'Content-Type': 'application/json; charset=UTF-8',
       'Authorization': 'Bearer $_accessToken',
     };
   }
 
-  Future<void> signUp({
+  Future<void> signUp({ 
     required String name, 
     required String email, 
     required String phone, 
@@ -31,7 +46,7 @@ class ApiService {
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonEncode(<String, String>{
+      body: jsonEncode(<String, String>{ 
         'name': name,
         'email': email,
         'phone': phone, 
@@ -63,10 +78,23 @@ class ApiService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       
+      print('RESPONS JSON DARI SERVER: $data'); 
+      
+      String? token;
+      
       if (data['data'] != null && data['data']['accessToken'] != null) {
-          _accessToken = data['data']['accessToken'];
+          token = data['data']['accessToken'];
+      } else if (data['accessToken'] != null) {
+          token = data['accessToken'];
+      } else if (data['token'] != null) {
+          token = data['token'];
+      }
+
+      if (token != null) {
+          _accessToken = token;
+          await StorageHelper.saveAccessToken(token);
       } else {
-          throw Exception("Login berhasil, tapi token tidak ditemukan dalam respons.");
+          throw Exception("Login berhasil, tapi token tidak ditemukan dalam respons. Lihat konsol untuk melihat struktur respons.");
       }
     } else {
       final errorData = jsonDecode(response.body);
@@ -75,12 +103,14 @@ class ApiService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchCourses() async {
+  Future<List<Map<String, dynamic>>> fetchCourses() async { 
     final url = Uri.parse('$_apiUrlV1/courses'); 
+    
+    final headers = await getAuthHeaders();
     
     final response = await http.get(
       url,
-      headers: _authHeaders,
+      headers: headers,
     );
 
     if (response.statusCode == 200) {
@@ -90,9 +120,16 @@ class ApiService {
       }
       throw Exception('Format data kursus tidak sesuai.');
     } else {
-      final errorData = jsonDecode(response.body);
-      final message = errorData['message'] ?? 'Gagal memuat data kursus.';
-      throw Exception('Gagal memuat data kursus. Status: ${response.statusCode}. Pesan: $message');
+      String message = 'Gagal memuat data kursus.';
+      if (response.body.isNotEmpty) {
+          try {
+              final errorData = jsonDecode(response.body);
+              message = errorData['message'] ?? 'Gagal memuat data kursus. Status: ${response.statusCode}';
+          } catch (_) {
+              message = 'Gagal memuat data kursus: ${response.body}. Status: ${response.statusCode}';
+          }
+      }
+      throw Exception(message);
     }
   }
   
@@ -104,23 +141,33 @@ class ApiService {
   }) async {
     final url = Uri.parse('$_apiUrlV1/courses'); 
     
-    final priceInt = int.tryParse(price) ?? 0;
+    final formattedPrice = double.tryParse(price)?.toStringAsFixed(2) ?? '0.00';
+    final headers = await getAuthHeaders();
 
     final response = await http.post(
       url,
-      headers: _authHeaders,
+      headers: headers,
       body: jsonEncode(<String, dynamic>{
         'name': name,
-        'price': priceInt, 
-        'category': category,
-        'thumbnailUrl': thumbnailUrl, 
+        'price': formattedPrice,           
+        'categoryTag': [category],         
+        'thumbnail': thumbnailUrl,         
       }),
     );
     
     if (response.statusCode != 201) {
-      final errorData = jsonDecode(response.body);
-      final message = errorData['message'] ?? 'Gagal menambahkan kelas baru.';
-      throw Exception('Gagal menambahkan kelas baru. Status: ${response.statusCode}. Pesan: $message');
+      String message = 'Gagal menambahkan kelas baru. Status: ${response.statusCode}';
+
+      if (response.body.isNotEmpty) {
+        try {
+          final errorData = jsonDecode(response.body);
+          message = errorData['message'] ?? 'Error status ${response.statusCode}. Pesan server tidak jelas.';
+        } catch (_) {
+          message = 'Server merespons non-JSON: ${response.body}. Status: ${response.statusCode}';
+        }
+      }
+      
+      throw Exception(message); 
     }
   }
   
@@ -133,38 +180,54 @@ class ApiService {
   }) async {
     final url = Uri.parse('$_apiUrlV1/courses/$courseId'); 
     
-    final priceInt = int.tryParse(price) ?? 0;
+    final formattedPrice = double.tryParse(price)?.toStringAsFixed(2) ?? '0.00';
+    final headers = await getAuthHeaders();
 
     final response = await http.put(
       url,
-      headers: _authHeaders,
+      headers: headers,
       body: jsonEncode(<String, dynamic>{
         'name': name,
-        'price': priceInt, 
-        'category': category,
-        'thumbnailUrl': thumbnailUrl, 
+        'price': formattedPrice,           
+        'categoryTag': [category],         
+        'thumbnail': thumbnailUrl,         
       }),
     );
     
     if (response.statusCode != 200) {
-      final errorData = jsonDecode(response.body);
-      final message = errorData['message'] ?? 'Gagal memperbarui kelas.';
-      throw Exception('Gagal memperbarui kelas $courseId. Status: ${response.statusCode}. Pesan: $message');
+      String message = 'Gagal memperbarui kelas.';
+      if (response.body.isNotEmpty) {
+          try {
+              final errorData = jsonDecode(response.body);
+              message = errorData['message'] ?? 'Gagal memperbarui kelas. Status: ${response.statusCode}';
+          } catch (_) {
+              message = 'Gagal memperbarui kelas: ${response.body}. Status: ${response.statusCode}';
+          }
+      }
+      throw Exception(message);
     }
   }
 
   Future<void> deleteCourse(String courseId) async {
     final url = Uri.parse('$_apiUrlV1/courses/$courseId'); 
+    final headers = await getAuthHeaders();
 
     final response = await http.delete(
       url,
-      headers: _authHeaders,
+      headers: headers,
     );
 
     if (response.statusCode != 200 && response.statusCode != 204) {
-      final errorData = jsonDecode(response.body);
-      final message = errorData['message'] ?? 'Gagal menghapus kelas.';
-      throw Exception('Gagal menghapus kelas $courseId. Status: ${response.statusCode}. Pesan: $message');
+      String message = 'Gagal menghapus kelas.';
+      if (response.body.isNotEmpty) {
+          try {
+              final errorData = jsonDecode(response.body);
+              message = errorData['message'] ?? 'Gagal menghapus kelas. Status: ${response.statusCode}';
+          } catch (_) {
+              message = 'Gagal menghapus kelas: ${response.body}. Status: ${response.statusCode}';
+          }
+      }
+      throw Exception(message);
     }
   }
 }

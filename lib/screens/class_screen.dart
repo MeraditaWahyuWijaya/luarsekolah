@@ -2,186 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_image_picker/form_builder_image_picker.dart';
-import '../utils/validators.dart';
-import '../services/api_service.dart';
 import 'dart:io';
+import 'package:get/get.dart'; 
+import '../controllers/class_controller.dart'; 
+import '../models/class_model.dart';
+import '../utils/validators.dart';
 
-enum ClassOption { edit, delete }
-enum ClassCategory { populer, spl }
+class KelasPopulerScreenClean extends StatelessWidget {
+  KelasPopulerScreenClean({super.key});
 
-class KelasPopulerScreen extends StatefulWidget {
-  const KelasPopulerScreen({super.key});
-
-  @override
-  State<KelasPopulerScreen> createState() => _KelasPopulerScreenState();
-}
-
-class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
   static const Color _kButtonGreen = Color(0xFF00A65A);
-
-  ClassCategory _selectedCategory = ClassCategory.populer;
+  final ClassController controller = Get.put(ClassController()); 
   final _formKey = GlobalKey<FormBuilderState>();
-
-  final ApiService _apiService = ApiService();
-  bool _isFormVisible = false;
-  bool _isEditMode = false;
-
-  Map<String, dynamic>? _classToEdit;
-
-  late Future<List<Map<String, dynamic>>> _futureClasses;
-  List<Map<String, dynamic>> _allClasses = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchData();
-  }
-
-  void _fetchData() {
-    setState(() {
-      _futureClasses = _apiService.fetchCourses().then((data) {
-        _allClasses = data;
-        return data;
-      });
-    });
-  }
-
-  List<Map<String, dynamic>> get _filteredClasses {
-    return _allClasses
-        .where((kelas) {
-          final categoryTag = kelas['category']?.toString().toLowerCase() ?? '';
-          
-          if (_selectedCategory == ClassCategory.populer) {
-            return categoryTag.contains('populer') || categoryTag.contains('umum');
-          } else {
-            return categoryTag.contains('spl') || categoryTag.contains('spesial');
-          }
-        })
-        .toList();
-  }
-
-  void _showEditForm(Map<String, dynamic> classData) {
-    setState(() {
-      _isEditMode = true;
-      _isFormVisible = true;
-      _classToEdit = classData;
-    });
-  }
-
-  void _selectCategory(ClassCategory category) {
-    setState(() {
-      _selectedCategory = category;
-    });
-  }
-
-  void _handleMenuItemSelected(
-      ClassOption result, Map<String, dynamic> classData) {
-    if (result == ClassOption.edit) {
-      _showEditForm(classData);
-    } else if (result == ClassOption.delete) {
-      _deleteClass(
-          classData['id'].toString(), classData['name'] ?? classData['title']);
-    }
-  }
-
-  Future<void> _submitAddClass(Map<String, dynamic> formData) async {
-    try {
-      final String thumbnailUrl = 'https://picsum.photos/300/200?random=${DateTime.now().millisecondsSinceEpoch}';
-
-      await _apiService.createCourse(
-        name: formData['title'],
-        price: formData['price'],
-        category: formData['category'].toString().split('.').last,
-        thumbnailUrl: thumbnailUrl,
-      );
-
-      _fetchData();
-
-      setState(() {
-        _isFormVisible = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kelas "${formData['title']}" berhasil ditambahkan!')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menambah kelas: ${e.toString().replaceFirst('Exception: ', '')}')),
-      );
-    }
-  }
-
-  Future<void> _deleteClass(String classId, String? classTitle) async {
-    final bool? confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi Hapus'),
-        content: Text('Anda yakin ingin menghapus kelas "${classTitle ?? 'ini'}"?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Batal')),
-          ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Hapus')),
-        ],
-      ),
-    );
-    if (confirm != true) return;
-    try {
-      await _apiService.deleteCourse(classId);
-
-      _fetchData();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kelas "${classTitle ?? 'Kelas'}" berhasil dihapus!')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menghapus kelas: ${e.toString().replaceFirst('Exception: ', '')}')),
-      );
-    }
-  }
-
-  Future<void> _submitEditClass(Map<String, dynamic> formData) async {
-    if (_classToEdit == null) return;
-    
-    final String idToEdit = _classToEdit!['id']?.toString() ?? '';
-    
-    if (idToEdit.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal mengedit: ID kelas tidak ditemukan.')),
-        );
-        return;
-    }
-    
-    final String oldThumbnail = _classToEdit!['thumbnailUrl']?.toString() ?? 'https://example.com/default-thumbnail.jpg';
-
-    try {
-      await _apiService.updateCourse(
-        courseId: idToEdit,
-        name: formData['title'],
-        price: formData['price'],
-        category: formData['category'].toString().split('.').last,
-        thumbnailUrl: oldThumbnail,
-      );
-
-      _fetchData();
-
-      setState(() {
-        _isFormVisible = false;
-        _isEditMode = false;
-        _classToEdit = null;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kelas "${formData['title']}" berhasil diedit!')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengedit kelas: ${e.toString().replaceFirst('Exception: ', '')}')),
-      );
-    }
-  }
 
   String _formatClassPrice(Map<String, dynamic> classData) {
     final priceValue = classData['price']?.toString() ?? '0';
@@ -190,156 +22,186 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
     }
     return 'Harga: Tidak Diketahui';
   }
+  
+  void _handleMenuItemSelected(ClassOption result, ClassModel classData) {
+    if (result == ClassOption.edit) {
+      controller.showEditForm(classData);
+    } else if (result == ClassOption.delete) {
+      _showDeleteConfirmationDialog(classData); 
+    }
+  }
+
+  Future<void> _showDeleteConfirmationDialog(ClassModel classData) async {
+    await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Konfirmasi Hapus'),
+        content: Text('Anda yakin ingin menghapus kelas "${classData.title}"?'),
+        actions: [
+          TextButton(
+              onPressed: () => Get.back(result: false),
+              child: const Text('Batal')),
+          ElevatedButton(
+              onPressed: () {
+                controller.deleteClass(classData.id, classData.title);
+                Get.back(result: true); 
+              },
+              child: const Text('Hapus')),
+        ],
+      ),
+    );
+  }
 
   Widget _buildAddClassFormWidget() {
-    final bool isEditing = _isEditMode && _classToEdit != null;
+    return Obx(() {
+        final bool isEditing = controller.isEditMode.value && controller.classToEdit != null;
+        final ClassModel? classToEdit = controller.classToEdit;
+      
+        final String initialPrice = isEditing
+            ? (classToEdit! .price)
+                  .replaceAll('Rp ', '')
+                  .replaceAll('.', '')
+                  .replaceAll(',', '')
+                  .trim()
+            : '';
+            
+        final String initialTitle = isEditing
+            ? classToEdit!.title 
+            : '';
 
-    final String initialPrice = isEditing
-        ? (_classToEdit!['price']?.toString() ?? '')
-            .replaceAll('Rp ', '')
-            .replaceAll('.', '')
-            .replaceAll(',', '')
-            .trim()
-        : '';
+        final ClassCategory initialCategory = isEditing
+            ? (classToEdit!.category.toLowerCase().contains('spl') == true 
+                ? ClassCategory.spl 
+                : ClassCategory.populer)
+            : ClassCategory.populer;
+            
+        final Map<String, dynamic>? initialValues = isEditing
+            ? {
+                  'title': initialTitle,
+                  'price': initialPrice,
+                  'category': initialCategory,
+              }
+            : null;
         
-    final String initialTitle = isEditing
-        ? _classToEdit!['name'] ?? _classToEdit!['title'] ?? ''
-        : '';
-
-    final ClassCategory initialCategory = isEditing
-        ? (_classToEdit!['category']?.toString().toLowerCase().contains('spl') == true 
-            ? ClassCategory.spl 
-            : ClassCategory.populer)
-        : ClassCategory.populer;
-        
-    final Map<String, dynamic>? initialValues = isEditing
-        ? {
-            'title': initialTitle,
-            'price': initialPrice,
-            'category': initialCategory,
-          }
-        : null;
-
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(12.0),
-      ),
-      child: FormBuilder(
-        key: _formKey,
-        initialValue: initialValues ?? const {},
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(isEditing ? 'Edit Informasi Kelas' : 'Informasi Kelas Baru',
-                style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold, fontSize: 20)),
-            const Divider(thickness: 2, height: 20),
-            const SizedBox(height: 10),
-            FormBuilderTextField(
-              name: 'title',
-              decoration: const InputDecoration(
-                labelText: 'Nama Kelas',
-                border: OutlineInputBorder(),
-              ),
-              validator: Validators.required('Nama Kelas'),
-            ),
-            const SizedBox(height: 16),
-            FormBuilderTextField(
-              name: 'price',
-              decoration: const InputDecoration(
-                labelText: 'Harga Kelas (Hanya Angka)',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.isEmpty) return 'Harga wajib diisi.';
-                if (double.tryParse(
-                        value.replaceAll('.', '').replaceAll(',', '')) ==
-                    null) return 'Harga harus berupa angka.';
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            FormBuilderDropdown<ClassCategory>(
-              name: 'category',
-              decoration: const InputDecoration(
-                labelText: 'Kategori Kelas',
-                border: OutlineInputBorder(),
-              ),
-              initialValue: initialCategory,
-              validator: (value) =>
-                  Validators.requiredEnum(value, 'Kategori Kelas'),
-              items: ClassCategory.values.map((category) {
-                return DropdownMenuItem<ClassCategory>(
-                  value: category,
-                  child: Text(category == ClassCategory.populer
-                      ? 'Kelas Terpopuler'
-                      : 'Kelas SPL'),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-            if (!isEditing) ...[
-              Text('Thumbnail Kelas',
-                  style: GoogleFonts.montserrat(
-                      fontWeight: FontWeight.w600, fontSize: 14)),
-              const SizedBox(height: 8),
-              FormBuilderImagePicker(
-                name: 'imageAsset',
-                decoration: const InputDecoration(
-                  hintText: 'Pilih atau ambil gambar',
-                  border: OutlineInputBorder(),
-                ),
-                maxImages: 1,
-                imageQuality: 50,
-                validator: (images) => (images == null || images.isEmpty)
-                    ? 'Thumbnail wajib diisi.'
-                    : null,
-              ),
-              const SizedBox(height: 24),
-            ],
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+        return Container(
+          padding: const EdgeInsets.all(16.0),
+          margin: const EdgeInsets.only(bottom: 20),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          child: FormBuilder(
+            key: _formKey,
+            initialValue: initialValues ?? const {},
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _isFormVisible = false;
-                      _isEditMode = false;
-                      _classToEdit = null;
-                    });
-                  },
-                  child: Text('Batal',
-                      style: GoogleFonts.montserrat(color: Colors.grey.shade600)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _kButtonGreen,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                Text(isEditing ? 'Edit Informasi Kelas' : 'Informasi Kelas Baru',
+                    style: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.bold, fontSize: 20)),
+                const Divider(thickness: 2, height: 20),
+                const SizedBox(height: 10),
+                FormBuilderTextField(
+                  name: 'title',
+                  decoration: const InputDecoration(
+                    labelText: 'Nama Kelas',
+                    border: OutlineInputBorder(),
                   ),
-                  onPressed: () {
-                    if (_formKey.currentState?.saveAndValidate() ?? false) {
-                      final formData = _formKey.currentState!.value;
-                      if (isEditing) {
-                        _submitEditClass(formData);
-                      } else {
-                        _submitAddClass(formData);
-                      }
+                  validator: Validators.required('Nama Kelas'),
+                ),
+                const SizedBox(height: 16),
+                FormBuilderTextField(
+                  name: 'price',
+                  decoration: const InputDecoration(
+                    labelText: 'Harga Kelas (Hanya Angka)',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Harga wajib diisi.';
+                    if (double.tryParse(
+                            value.replaceAll('.', '').replaceAll(',', '')) ==
+                        null) {
+                      return 'Harga harus berupa angka.';
                     }
+                    return null;
                   },
-                  child: Text(isEditing ? 'Simpan Perubahan' : 'Simpan',
+                ),
+                 const SizedBox(height: 16),
+                FormBuilderDropdown<ClassCategory>(
+                  name: 'category',
+                  decoration: const InputDecoration(
+                    labelText: 'Kategori Kelas',
+                    border: OutlineInputBorder(),
+                  ),
+                  initialValue: initialCategory,
+                  validator: (value) =>
+                      Validators.requiredEnum(value, 'Kategori Kelas'),
+                  items: ClassCategory.values.map((category) {
+                    return DropdownMenuItem<ClassCategory>(
+                      value: category,
+                      child: Text(category == ClassCategory.populer
+                          ? 'Kelas Terpopuler'
+                          : 'Kelas SPL'),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+                if (!isEditing) ...[
+                  Text('Thumbnail Kelas',
                       style: GoogleFonts.montserrat(
-                          color: Colors.white, fontWeight: FontWeight.bold)),
+                          fontWeight: FontWeight.w600, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  FormBuilderImagePicker(
+                    name: 'imageAsset',
+                    decoration: const InputDecoration(
+                      hintText: 'Pilih atau ambil gambar',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxImages: 1,
+                    imageQuality: 50,
+                    validator: (images) => (images == null || images.isEmpty)
+                        ? 'Thumbnail wajib diisi.'
+                        : null,
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    TextButton(
+                      onPressed: () {
+                        controller.hideForm();
+                      },
+                      child: Text('Batal',
+                          style: GoogleFonts.montserrat(color: Colors.grey.shade600)),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _kButtonGreen,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                      ),
+                      onPressed: () {
+                        if (_formKey.currentState?.saveAndValidate() ?? false) {
+                          final formData = _formKey.currentState!.value;
+                          if (isEditing) {
+                            controller.submitEditClass(formData);
+                          } else {
+                            controller.submitAddClass(formData);
+                          }
+                        }
+                      },
+                      child: Text(isEditing ? 'Simpan Perubahan' : 'Simpan',
+                          style: GoogleFonts.montserrat(
+                              color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      }
     );
   }
 
@@ -349,11 +211,7 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
       children: [
         ElevatedButton.icon(
           onPressed: () {
-            setState(() {
-              _isFormVisible = true;
-              _isEditMode = false;
-              _classToEdit = null;
-            });
+            controller.showAddForm();
           },
           icon: const Icon(Icons.add, color: Colors.white, size: 20),
           label: Text(
@@ -377,124 +235,15 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80.0),
-        child: AppBar(
-          automaticallyImplyLeading: false,
-          elevation: 0,
-          backgroundColor: Colors.white,
-          flexibleSpace: Align(
-            alignment: Alignment.bottomCenter,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    children: [
-                      InkWell(
-                        onTap: () => _selectCategory(ClassCategory.populer),
-                        child: _buildCategoryTab('Kelas Terpopuler',
-                            isSelected:
-                                _selectedCategory == ClassCategory.populer),
-                      ),
-                      const SizedBox(width: 20),
-                      InkWell(
-                        onTap: () => _selectCategory(ClassCategory.spl),
-                        child: _buildCategoryTab('Kelas SPL',
-                            isSelected: _selectedCategory == ClassCategory.spl),
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1, thickness: 2, color: _kButtonGreen),
-              ],
-            ),
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            _isFormVisible ? _buildAddClassFormWidget() : _buildAddClassButton(),
-            const SizedBox(height: 20),
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: _futureClasses,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 50.0),
-                      child: CircularProgressIndicator(color: _kButtonGreen),
-                    ),
-                  );
-                } else if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 50.0),
-                      child: Text(
-                        'Gagal memuat data: \n${snapshot.error.toString().replaceFirst('Exception: ', '')}',
-                        style: GoogleFonts.montserrat(
-                            color: Colors.red, fontWeight: FontWeight.w500),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  );
-                } else if (snapshot.hasData) {
-                  if (_filteredClasses.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 50.0),
-                        child: Text('Tidak ada kelas di kategori yang dipilih.',
-                            style: GoogleFonts.montserrat(color: Colors.grey)),
-                      ),
-                    );
-                  }
-
-                  return Column(
-                    children: _filteredClasses
-                        .map(
-                          (classData) => Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _buildClassCard(
-                              context,
-                              classData: classData,
-                              title: classData['name'] ?? classData['title'] ?? 'Judul Tidak Tersedia',
-                              price: _formatClassPrice(classData),
-                              tags: [classData['category']?.toString() ?? 'General', 'API'],
-                              imagePath: classData['thumbnailUrl'] ?? classData['thumbnail'] ?? 'assets/pengolahansampah.png',
-                              onMenuSelected: (result) =>
-                                  _handleMenuItemSelected(result, classData),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-            const SizedBox(height: 80),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildCategoryTab(String title, {bool isSelected = false}) {
     return Container(
       padding: const EdgeInsets.only(bottom: 10, top: 15),
       decoration: isSelected
           ? const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: _kButtonGreen, width: 2),
-              ),
-            )
+                border: Border(
+                  bottom: BorderSide(color: _kButtonGreen, width: 2),
+                ),
+              )
           : null,
       child: Text(
         title,
@@ -509,15 +258,17 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
 
   Widget _buildClassCard(
     BuildContext context, {
-    required Map<String, dynamic> classData,
+    required ClassModel classData,
     required String title,
     required String price,
     required List<String> tags,
     required String imagePath,
     required Function(ClassOption) onMenuSelected,
+    required bool isCompleted,
+    required VoidCallback onToggleComplete,
   }) {
     
-    Widget _getImageWidget() {
+    Widget getImageWidget() {
       if (imagePath.startsWith('assets/') || imagePath.contains('/assets/')) {
         return Image.asset(
           imagePath,
@@ -565,7 +316,7 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                _getImageWidget(),
+                getImageWidget(),
                 const Positioned(
                   top: 5,
                   right: 5,
@@ -607,6 +358,7 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
                   style: GoogleFonts.montserrat(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
+                    decoration: isCompleted ? TextDecoration.lineThrough : null,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -627,6 +379,11 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
               ],
             ),
           ),
+        ),
+        // Tambahan Checkbox
+        Checkbox(
+          value: isCompleted, 
+          onChanged: (val) => onToggleComplete(),
         ),
         PopupMenuButton<ClassOption>(
           onSelected: (result) => onMenuSelected(result),
@@ -686,6 +443,117 @@ class _KelasPopulerScreenState extends State<KelasPopulerScreen> {
             fontSize: 10,
             fontWeight: FontWeight.bold,
           ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80.0),
+        child: AppBar(
+          automaticallyImplyLeading: false,
+          elevation: 0,
+          backgroundColor: Colors.white,
+          flexibleSpace: Align(
+            alignment: Alignment.bottomCenter,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      InkWell(
+                        onTap: () => controller.selectCategory(ClassCategory.populer),
+                        child: Obx(
+                          () => _buildCategoryTab('Kelas Terpopuler',
+                              isSelected:
+                                  controller.selectedCategory.value == ClassCategory.populer),
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      InkWell(
+                        onTap: () => controller.selectCategory(ClassCategory.spl),
+                        child: Obx(
+                          () => _buildCategoryTab('Kelas SPL',
+                              isSelected: controller.selectedCategory.value == ClassCategory.spl),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1, thickness: 2, color: _kButtonGreen),
+              ],
+            ),
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Obx(() => controller.isFormVisible.value ? _buildAddClassFormWidget() : _buildAddClassButton()),
+            
+            const SizedBox(height: 20),
+            
+            Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 50.0),
+                    child: CircularProgressIndicator(color: _kButtonGreen),
+                  ),
+                );
+              } else if (controller.errorMessage.isNotEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 50.0),
+                    child: Text(
+                      'Gagal memuat data: \n${controller.errorMessage.value}',
+                      style: GoogleFonts.montserrat(
+                          color: Colors.red, fontWeight: FontWeight.w500),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              } else if (controller.filteredClasses.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 50.0),
+                    child: Text('Tidak ada kelas di kategori yang dipilih.',
+                        style: GoogleFonts.montserrat(color: Colors.grey)),
+                  ),
+                );
+              }
+
+              return Column(
+                children: controller.filteredClasses
+                    .map(
+                      (classData) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _buildClassCard(
+                          context,
+                          classData: classData,
+                          title: classData.title,
+                          price: _formatClassPrice(classData.toJson()),
+                          tags: [classData.category, 'API'],
+                          imagePath: classData.thumbnailUrl,
+                          onMenuSelected: (result) =>
+                              _handleMenuItemSelected(result, classData),
+                          isCompleted: classData.isCompleted,
+                          onToggleComplete: () => controller.toggleCompletionStatus(classData),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              );
+            }),
+            const SizedBox(height: 80),
+          ],
         ),
       ),
     );

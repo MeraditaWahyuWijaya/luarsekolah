@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:luarsekolah/login_screen.dart'; 
-import 'package:luarsekolah/main.dart'; 
 import 'package:luarsekolah/utils/storage_helper.dart';
 import 'route.dart';
 import '../services/api_service.dart';
@@ -20,8 +18,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   
-  final ApiService _apiService = ApiService(); //ini api nya 
-  bool _isLoading = false; 
+  final ApiService _apiService = ApiService(); //ini api nya // ambil data api_Service.dart
+  bool _isLoading = false; //kenapa false, karena nanti akan berubah jadi true ketika api jalan dan kemblai false lagi
 
   String? _recaptchaToken;
   bool _isRecaptchaVerified = false;
@@ -99,8 +97,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       });
 
       try {
-        await _apiService.signUp(
-          name: _nameController.text,
+        await _apiService.signUp(  //API //aplikasi akan menunggu hingga proses pengiriman data (_apiService.signUp)
+        // selesai sebelum melanjutkan ke baris kode
+          name: _nameController.text, //data yg dikirim ke srver yg udh diisi user
           email: _emailController.text,
           phone: _phoneController.text,
           password: _passwordController.text,

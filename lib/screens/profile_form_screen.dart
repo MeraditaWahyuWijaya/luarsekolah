@@ -318,7 +318,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
           Text(label, style: GoogleFonts.montserrat(fontSize: 14)),
           const SizedBox(height: 5),
           DropdownButtonFormField<String>(
-            value: value,
+            initialValue: value,
             decoration: InputDecoration(
               border:
                   OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

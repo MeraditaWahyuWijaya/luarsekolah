@@ -198,7 +198,7 @@ class CourseProgressCard extends StatelessWidget {
               Expanded(
                 flex: 1,
                 child: Text(
-                  '${progress}%',
+                  '$progress%',
                   // Menggunakan Montserrat
                   style: GoogleFonts.montserrat(fontSize: 12, color: Colors.black),
                   textAlign: TextAlign.right,

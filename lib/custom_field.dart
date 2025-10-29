@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
 import 'home_screen.dart';
 import 'screens/class_screen.dart';
 import 'screens/my_class_screen.dart';
 import 'screens/coin_ls_screen.dart';
 import 'screens/profile_form_screen.dart';
+import '../controllers/todo_controller.dart'; 
+import '../screens/coin_ls_screen.dart';
 
 const Color _kGreen = Color.fromRGBO(7, 126, 96, 1);
 
@@ -33,7 +36,6 @@ class CustomBottomNavBar extends StatelessWidget {
       {'label': 'Beranda', 'asset': 'assets/beranda.png'},
       {'label': 'Kelas', 'asset': 'assets/kelas.png'},
       {'label': 'Kelasku', 'asset': 'assets/kelasku.png'},
-      // HATI-HATI: Saya balik asset 'koinLS' dan 'Akun' agar sesuai urutan di bawah.
       {'label': 'koinLS', 'asset': 'assets/akun.png'},
       {'label': 'Akun', 'asset': 'assets/koinls.png'},
     ];
@@ -75,11 +77,11 @@ class MainScreenWithNavBar extends StatefulWidget {
 class _MainScreenWithNavBarState extends State<MainScreenWithNavBar> {
   late int _currentIndex;
 
-  final List<Widget> _pages = const [
+  final List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
-    KelasPopulerScreen(),
+    KelasPopulerScreenClean(),
     MyClassScreen(),
-    CoinLSScreen(),
+   TodoDashboardPage(), 
     ProfileFormScreen(),
   ];
 
@@ -87,9 +89,18 @@ class _MainScreenWithNavBarState extends State<MainScreenWithNavBar> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    
+    // Inisialisasi controller di initState jika halaman ini adalah homepage
+    if (_currentIndex == 3 && !Get.isRegistered<TodoController>()) {
+      Get.put(TodoController());
+    }
   }
 
   void _onItemTapped(int index) {
+    if (index == 3 && !Get.isRegistered<TodoController>()) {
+      Get.put(TodoController());
+    }
+    
     setState(() {
       _currentIndex = index;
     });
@@ -110,7 +121,7 @@ class _MainScreenWithNavBarState extends State<MainScreenWithNavBar> {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _pages,
+        children:_widgetOptions,
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,

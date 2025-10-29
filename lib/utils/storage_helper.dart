@@ -4,18 +4,31 @@ import 'package:luarsekolah/utils/storage_keys.dart';
 class StorageHelper {
   static SharedPreferences? _prefs;
 
-
   static Future<SharedPreferences> getInstance() async {
     _prefs ??= await SharedPreferences.getInstance();
     return _prefs!;
   }
 
- //buat nyimpen datanya
+  static Future<void> saveAccessToken(String token) async {
+    final prefs = await getInstance();
+    await prefs.setString(StorageKeys.accessToken, token);
+  }
+
+  static Future<String?> getAccessToken() async {
+    final prefs = await getInstance();
+    return prefs.getString(StorageKeys.accessToken);
+  }
+
+  static Future<void> deleteAccessToken() async {
+    final prefs = await getInstance();
+    await prefs.remove(StorageKeys.accessToken);
+  }
+
   static Future<void> saveUserData({
     required String email,
     required String name,
     required String phone,
-    required String password, 
+    required String password,
     String? address,
     String? gender,
     String? jobStatus,
@@ -32,12 +45,10 @@ class StorageHelper {
     await prefs.setString(StorageKeys.userPassword, password);
   }
 
-
   static Future<void> saveLastEmail(String email) async {
     final prefs = await getInstance();
     await prefs.setString('last_email', email);
   }
-
 
   static Future<String> getLastEmail() async {
     final prefs = await getInstance();
@@ -68,5 +79,6 @@ class StorageHelper {
     await prefs.remove(StorageKeys.userJobStatus);
     await prefs.remove(StorageKeys.userDOB);
     await prefs.remove(StorageKeys.userPassword);
+    await deleteAccessToken(); // Hapus token saat clear data
   }
 }
