@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'register_screen.dart';
-import 'package:luarsekolah/utils/storage_helper.dart';
-import '../services/api_service.dart';
-import 'package:luarsekolah/custom_field.dart';
+import 'package:luarsekolah/data/providers/storage_helper.dart'; 
+import 'package:luarsekolah/data/providers/api_service.dart';
+import 'package:luarsekolah/presentation/widgets/custom_field.dart'; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

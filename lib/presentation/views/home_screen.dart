@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'utils/hover_card.dart';
+import 'package:luarsekolah/presentation/widgets/hover_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

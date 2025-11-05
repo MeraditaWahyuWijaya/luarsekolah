@@ -1,15 +1,19 @@
 import 'package:get/get.dart';
-import 'package:luarsekolah/models/todo.dart';
-import 'package:luarsekolah/services/todo_api_service.dart';
+import 'package:luarsekolah/domain/entities/todo.dart';
+import 'package:luarsekolah/domain/usecases/fetch_todos_use_case.dart';
+import 'package:luarsekolah/domain/repositories/i_todo_repository.dart';
 import 'package:flutter/material.dart';
 
-enum TodoFilter { all, completed, pending }
+enum TodoFilter { all, completed, pending } 
 
 class TodoController extends GetxController {
-  final TodoApiService _apiService = TodoApiService();
+  final FetchTodosUseCase _fetchTodosUseCase;
+  final ITodoRepository _repository; 
+  
+  TodoController(this._fetchTodosUseCase, this._repository);
   
   var todos = <Todo>[].obs; 
-  var isLoading = false.obs;
+  var isLoading = false.obs; 
   var errorMessage = Rxn<String>(); 
   var filter = TodoFilter.all.obs; 
 
@@ -42,7 +46,7 @@ class TodoController extends GetxController {
     isLoading(true);
     errorMessage(null);
     try {
-      final fetchedTodos = await _apiService.fetchTodos();
+      final fetchedTodos = await _fetchTodosUseCase.execute();
       todos.assignAll(fetchedTodos);
     } catch (e) {
       errorMessage('Gagal memuat data: ${e.toString()}');
@@ -55,7 +59,7 @@ class TodoController extends GetxController {
     if (text.isEmpty) return;
     isLoading(true); 
     try {
-      final newTodo = await _apiService.createTodo(text, description);
+      final newTodo = await _repository.createTodo(text, description);
       todos.insert(0, newTodo); 
       Get.back();
       Get.snackbar(
@@ -88,7 +92,7 @@ class TodoController extends GetxController {
     todos.refresh(); 
 
     try {
-      await _apiService.toggleTodo(id); 
+      await _repository.toggleTodo(id); 
     } catch (e) {
       todos[todoIndex] = oldTodo.copyWith(completed: oldCompleted);
       todos.refresh();
@@ -109,7 +113,7 @@ class TodoController extends GetxController {
     final deletedTodo = todos.removeAt(todoIndex); 
 
     try {
-      await _apiService.deleteTodo(id);
+      await _repository.deleteTodo(id);
       Get.snackbar(
         'Dihapus',
         'Todo berhasil dihapus.',

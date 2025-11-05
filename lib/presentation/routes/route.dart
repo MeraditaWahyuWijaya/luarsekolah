@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'register_screen.dart';
-import 'login_screen.dart';
-import 'home_screen.dart';
+import 'package:luarsekolah/presentation/views/register_screen.dart';
+import 'package:luarsekolah/presentation/views/login_screen.dart';
+import 'package:luarsekolah/presentation/views/home_screen.dart';
 
 class AppRoutes {
   static const register = '/register';

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:luarsekolah/utils/storage_helper.dart';
-import 'route.dart';
-import '../services/api_service.dart';
+import 'package:luarsekolah/data/providers/storage_helper.dart'; 
+import 'package:luarsekolah/presentation/routes/route.dart';
+import 'package:luarsekolah/data/providers/api_service.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});

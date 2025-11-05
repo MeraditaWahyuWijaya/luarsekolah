@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
-import 'home_screen.dart';
-import 'screens/class_screen.dart';
-import 'screens/my_class_screen.dart';
-import 'screens/coin_ls_screen.dart';
-import 'screens/profile_form_screen.dart';
-import '../controllers/todo_controller.dart'; 
-import '../screens/coin_ls_screen.dart';
+import 'package:luarsekolah/presentation/views/home_screen.dart';
+import 'package:luarsekolah/presentation/views/class_screen.dart';
+import 'package:luarsekolah/presentation/views/my_class_screen.dart';
+import 'package:luarsekolah/presentation/views/coin_ls_screen.dart';
+import 'package:luarsekolah/presentation/views/profile_form_screen.dart';
+import 'package:luarsekolah/presentation/controllers/todo_controllers.dart';
+import '../bindings/class_binding.dart';
+import '../bindings/todo_binding.dart';
+import 'package:luarsekolah/presentation/controllers/class_controllers.dart';
 
 const Color _kGreen = Color.fromRGBO(7, 126, 96, 1);
 
@@ -81,7 +83,7 @@ class _MainScreenWithNavBarState extends State<MainScreenWithNavBar> {
     HomeScreen(),
     KelasPopulerScreenClean(),
     MyClassScreen(),
-   TodoDashboardPage(), 
+   TodoDashboardPage(),
     ProfileFormScreen(),
   ];
 
@@ -90,17 +92,16 @@ class _MainScreenWithNavBarState extends State<MainScreenWithNavBar> {
     super.initState();
     _currentIndex = widget.initialIndex;
     
-    // Inisialisasi controller di initState jika halaman ini adalah homepage
-    if (_currentIndex == 3 && !Get.isRegistered<TodoController>()) {
-      Get.put(TodoController());
+    if (!Get.isRegistered<ClassController>()) {
+      ClassBinding().dependencies();
+    }
+    
+    if (!Get.isRegistered<TodoController>()) {
+      TodoBinding().dependencies();
     }
   }
 
   void _onItemTapped(int index) {
-    if (index == 3 && !Get.isRegistered<TodoController>()) {
-      Get.put(TodoController());
-    }
-    
     setState(() {
       _currentIndex = index;
     });
@@ -121,7 +122,7 @@ class _MainScreenWithNavBarState extends State<MainScreenWithNavBar> {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children:_widgetOptions,
+        children: _widgetOptions,
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,

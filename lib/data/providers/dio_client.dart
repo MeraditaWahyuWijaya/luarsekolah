@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:luarsekolah/utils/storage_helper.dart';
+import 'package:luarsekolah/data/providers/storage_helper.dart';
 
 class DioClient {
   static final DioClient _instance = DioClient._internal();

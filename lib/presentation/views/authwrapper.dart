@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:luarsekolah/utils/storage_helper.dart'; 
-import 'package:luarsekolah/utils/storage_keys.dart';     
-import 'package:luarsekolah/login_screen.dart';     
-import 'custom_field.dart'; 
+import 'package:luarsekolah/data/providers/storage_helper.dart'; 
+import 'package:luarsekolah/data/providers/storage_keys.dart';     
+import 'package:luarsekolah/presentation/views/login_screen.dart';     
+import 'package:luarsekolah/presentation/widgets/custom_field.dart'; 
 
 
 const Color _kGreen = Color.fromRGBO(7, 126, 96, 1); 

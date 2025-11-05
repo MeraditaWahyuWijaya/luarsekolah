@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import '../models/todo.dart';
-import 'package:luarsekolah/utils/dio_client.dart'; 
+import 'package:luarsekolah/domain/entities/todo.dart';
+import 'package:luarsekolah/data/providers/dio_client.dart'; 
 
 class TodoApiService {
   final Dio _client = DioClient().dio;

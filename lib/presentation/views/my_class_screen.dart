@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../custom_field.dart'; 
+import 'package:luarsekolah/presentation/widgets/custom_field.dart'; 
 
 const String kBannerAsset = 'assets/banner.png'; 
 const Color _kTeal = Colors.teal; 

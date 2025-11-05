@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../bindings/todo_binding.dart';
-import '../controllers/todo_controller.dart';
-import '../models/todo.dart';
-import '../widget/todo_list_tile.dart';
+import 'package:luarsekolah/presentation/bindings/todo_binding.dart';
+import 'package:luarsekolah/presentation/controllers/todo_controllers.dart';
+import 'package:luarsekolah/domain/entities/todo.dart';
+import 'package:luarsekolah/presentation/widgets/todo_list_tile.dart';
 
 extension _ColorShade on Color {
   Color darken({double amount = .2}) {
@@ -14,11 +14,12 @@ extension _ColorShade on Color {
 }
 
 
-class TodoDashboardPage extends GetView<TodoController> {
+class TodoDashboardPage extends StatelessWidget {
   const TodoDashboardPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<TodoController>();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Todo Dashboard'),
@@ -32,7 +33,7 @@ class TodoDashboardPage extends GetView<TodoController> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add_task),
-        onPressed: () => _openCreateSheet(context),
+        onPressed: () => _openCreateSheet(context, controller),
         label: const Text('Tambah Todo'),
       ),
       body: SafeArea(
@@ -97,7 +98,7 @@ class TodoDashboardPage extends GetView<TodoController> {
     );
   }
 
-  Future<void> _openCreateSheet(BuildContext context) async {
+  Future<void> _openCreateSheet(BuildContext context, TodoController controller) async {
     final textController = TextEditingController();
     final descriptionController = TextEditingController(); 
 
@@ -239,13 +240,14 @@ class TodoDashboardPage extends GetView<TodoController> {
     final title = result['title']!;
     final description = result['description']!;
     
-    await controller.addTodo(title, description); 
+    await controller.addTodo(title, description);
     
     textController.dispose();
     descriptionController.dispose();
   }
 
   Future<void> _confirmDelete(BuildContext context, Todo todo) async {
+    final controller = Get.find<TodoController>();
     final confirm = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('Hapus Todo'),
@@ -268,6 +270,7 @@ class TodoDashboardPage extends GetView<TodoController> {
   }
 
   Future<void> _toggle(String id) async {
+    final controller = Get.find<TodoController>();
     await controller.toggleTodo(id);
   }
 }

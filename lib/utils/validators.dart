@@ -1,6 +1,6 @@
 class Validators {
   static String? Function(String?) required(String fieldName) => (value) {
-        if (value == null || value.isEmpty) {
+        if (value == null || value.trim().isEmpty) {
           return '$fieldName is required.';
         }
         return null;

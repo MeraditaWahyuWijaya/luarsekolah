@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
-import 'bindings/todo_binding.dart'; 
-import 'screens/coin_ls_screen.dart';
-import 'login_screen.dart'; 
-import 'register_screen.dart'; 
+import 'package:luarsekolah/presentation/bindings/todo_binding.dart';
+import 'package:luarsekolah/presentation/bindings/class_binding.dart'; 
+import 'package:luarsekolah/presentation/views/coin_ls_screen.dart';
+import 'package:luarsekolah/presentation/views/class_screen.dart';
+import 'package:luarsekolah/presentation/views/login_screen.dart'; 
+import 'package:luarsekolah/presentation/views/register_screen.dart'; 
+import 'package:luarsekolah/presentation/views/coin_ls_screen.dart';
 
 class AppRoutes {
   static const String register = '/register'; 
   static const String login = '/login'; 
   static const String todoDashboard = '/todo'; 
+  static const String classDashboard = '/kelas'; 
 }
 
 void main() {
@@ -46,27 +50,12 @@ class MyApp extends StatelessWidget {
           page: () => const TodoDashboardPage(),
           binding: TodoBinding(),
         ),
+        GetPage(
+        name: AppRoutes.classDashboard, 
+        page: () => KelasPopulerScreenClean(),
+        binding: ClassBinding(),
+      ),
       ],
-    );
-  }
-}
-
-class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text("Halaman Login")),
-    );
-  }
-}
-
-class RegisterPage extends StatelessWidget {
-  const RegisterPage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text("Halaman Register")),
     );
   }
 }

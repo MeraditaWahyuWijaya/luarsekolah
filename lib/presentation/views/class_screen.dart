@@ -1,29 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:form_builder_image_picker/form_builder_image_picker.dart';
 import 'dart:io';
 import 'package:get/get.dart'; 
-import '../controllers/class_controller.dart'; 
-import '../models/class_model.dart';
-import '../utils/validators.dart';
+import 'package:luarsekolah/presentation/controllers/class_controllers.dart';
+import 'package:luarsekolah/domain/entities/class_model.dart';
+import 'package:luarsekolah/utils/validators.dart';
 
 class KelasPopulerScreenClean extends StatelessWidget {
   KelasPopulerScreenClean({super.key});
 
   static const Color _kButtonGreen = Color(0xFF00A65A);
-  final ClassController controller = Get.put(ClassController()); 
   final _formKey = GlobalKey<FormBuilderState>();
 
   String _formatClassPrice(Map<String, dynamic> classData) {
     final priceValue = classData['price']?.toString() ?? '0';
-    if (int.tryParse(priceValue) != null) {
-      return 'Harga: Rp ${priceValue.toString()}';
+    if (double.tryParse(priceValue) != null) {
+      return 'Harga: Rp ${priceValue.toString().replaceAll(RegExp(r'\.0*$'), '')}';
     }
     return 'Harga: Tidak Diketahui';
   }
   
   void _handleMenuItemSelected(ClassOption result, ClassModel classData) {
+    final controller = Get.find<ClassController>();
     if (result == ClassOption.edit) {
       controller.showEditForm(classData);
     } else if (result == ClassOption.delete) {
@@ -32,6 +31,7 @@ class KelasPopulerScreenClean extends StatelessWidget {
   }
 
   Future<void> _showDeleteConfirmationDialog(ClassModel classData) async {
+    final controller = Get.find<ClassController>();
     await Get.dialog<bool>(
       AlertDialog(
         title: const Text('Konfirmasi Hapus'),
@@ -52,21 +52,27 @@ class KelasPopulerScreenClean extends StatelessWidget {
   }
 
   Widget _buildAddClassFormWidget() {
+    final controller = Get.find<ClassController>();
     return Obx(() {
         final bool isEditing = controller.isEditMode.value && controller.classToEdit != null;
         final ClassModel? classToEdit = controller.classToEdit;
       
         final String initialPrice = isEditing
             ? (classToEdit! .price)
-                  .replaceAll('Rp ', '')
-                  .replaceAll('.', '')
-                  .replaceAll(',', '')
-                  .trim()
+                .replaceAll('Rp ', '')
+                .replaceAll('.', '')
+                .replaceAll(',', '')
+                .trim()
             : '';
             
         final String initialTitle = isEditing
             ? classToEdit!.title 
             : '';
+            
+        final String initialThumbnailUrl = isEditing
+            ? classToEdit!.thumbnailUrl
+            : '';
+
 
         final ClassCategory initialCategory = isEditing
             ? (classToEdit!.category.toLowerCase().contains('spl') == true 
@@ -76,10 +82,11 @@ class KelasPopulerScreenClean extends StatelessWidget {
             
         final Map<String, dynamic>? initialValues = isEditing
             ? {
-                  'title': initialTitle,
-                  'price': initialPrice,
-                  'category': initialCategory,
-              }
+                        'title': initialTitle,
+                        'price': initialPrice,
+                        'category': initialCategory,
+                        'thumbnailUrl': initialThumbnailUrl,
+                    }
             : null;
         
         return Container(
@@ -92,112 +99,106 @@ class KelasPopulerScreenClean extends StatelessWidget {
           child: FormBuilder(
             key: _formKey,
             initialValue: initialValues ?? const {},
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(isEditing ? 'Edit Informasi Kelas' : 'Informasi Kelas Baru',
-                    style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.bold, fontSize: 20)),
-                const Divider(thickness: 2, height: 20),
-                const SizedBox(height: 10),
-                FormBuilderTextField(
-                  name: 'title',
-                  decoration: const InputDecoration(
-                    labelText: 'Nama Kelas',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: Validators.required('Nama Kelas'),
-                ),
-                const SizedBox(height: 16),
-                FormBuilderTextField(
-                  name: 'price',
-                  decoration: const InputDecoration(
-                    labelText: 'Harga Kelas (Hanya Angka)',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Harga wajib diisi.';
-                    if (double.tryParse(
-                            value.replaceAll('.', '').replaceAll(',', '')) ==
-                        null) {
-                      return 'Harga harus berupa angka.';
-                    }
-                    return null;
-                  },
-                ),
-                 const SizedBox(height: 16),
-                FormBuilderDropdown<ClassCategory>(
-                  name: 'category',
-                  decoration: const InputDecoration(
-                    labelText: 'Kategori Kelas',
-                    border: OutlineInputBorder(),
-                  ),
-                  initialValue: initialCategory,
-                  validator: (value) =>
-                      Validators.requiredEnum(value, 'Kategori Kelas'),
-                  items: ClassCategory.values.map((category) {
-                    return DropdownMenuItem<ClassCategory>(
-                      value: category,
-                      child: Text(category == ClassCategory.populer
-                          ? 'Kelas Terpopuler'
-                          : 'Kelas SPL'),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 16),
-                if (!isEditing) ...[
-                  Text('Thumbnail Kelas',
+            child: SingleChildScrollView( 
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(isEditing ? 'Edit Informasi Kelas' : 'Informasi Kelas Baru',
                       style: GoogleFonts.montserrat(
-                          fontWeight: FontWeight.w600, fontSize: 14)),
-                  const SizedBox(height: 8),
-                  FormBuilderImagePicker(
-                    name: 'imageAsset',
+                          fontWeight: FontWeight.bold, fontSize: 20)),
+                  const Divider(thickness: 2, height: 20),
+                  const SizedBox(height: 10),
+                  FormBuilderTextField(
+                    name: 'title',
                     decoration: const InputDecoration(
-                      hintText: 'Pilih atau ambil gambar',
+                      labelText: 'Nama Kelas',
                       border: OutlineInputBorder(),
                     ),
-                    maxImages: 1,
-                    imageQuality: 50,
-                    validator: (images) => (images == null || images.isEmpty)
-                        ? 'Thumbnail wajib diisi.'
-                        : null,
+                    validator: Validators.required('Nama Kelas'),
                   ),
-                  const SizedBox(height: 24),
-                ],
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: <Widget>[
-                    TextButton(
-                      onPressed: () {
-                        controller.hideForm();
-                      },
-                      child: Text('Batal',
-                          style: GoogleFonts.montserrat(color: Colors.grey.shade600)),
+                  const SizedBox(height: 16),
+                  FormBuilderTextField(
+                    name: 'price',
+                    decoration: const InputDecoration(
+                      labelText: 'Harga Kelas (Hanya Angka)',
+                      border: OutlineInputBorder(),
                     ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _kButtonGreen,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Harga wajib diisi.';
+                      if (double.tryParse(
+                                  value.replaceAll('.', '').replaceAll(',', '')) ==
+                              null) {
+                        return 'Harga harus berupa angka.';
+                      }
+                      return null;
+                    },
+                  ),
+                    const SizedBox(height: 16),
+                  FormBuilderDropdown<ClassCategory>(
+                    name: 'category',
+                    decoration: const InputDecoration(
+                      labelText: 'Kategori Kelas',
+                      border: OutlineInputBorder(),
+                    ),
+                    initialValue: initialCategory,
+                    validator: (value) =>
+                        Validators.requiredEnum(value, 'Kategori Kelas'),
+                    items: ClassCategory.values.map((category) {
+                      return DropdownMenuItem<ClassCategory>(
+                        value: category,
+                        child: Text(category == ClassCategory.populer
+                            ? 'Kelas Terpopuler'
+                            : 'Kelas SPL'),
+                      );
+                    }).toList(),
+                  ),
+                    const SizedBox(height: 16),
+                  FormBuilderTextField(
+                      name: 'thumbnailUrl',
+                      decoration: const InputDecoration(
+                        labelText: 'URL Thumbnail Kelas',
+                        hintText: 'Contoh: https://gambar.com/thumbnail.jpg',
+                        border: OutlineInputBorder(),
                       ),
-                      onPressed: () {
-                        if (_formKey.currentState?.saveAndValidate() ?? false) {
-                          final formData = _formKey.currentState!.value;
-                          if (isEditing) {
-                            controller.submitEditClass(formData);
-                          } else {
-                            controller.submitAddClass(formData);
-                          }
-                        }
-                      },
-                      child: Text(isEditing ? 'Simpan Perubahan' : 'Simpan',
-                          style: GoogleFonts.montserrat(
-                              color: Colors.white, fontWeight: FontWeight.bold)),
+                      keyboardType: TextInputType.url,
+                      validator: isEditing ? null : Validators.required('URL Thumbnail'), // Hanya wajib saat mode tambah
                     ),
-                  ],
-                ),
-              ],
+                    const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          controller.hideForm();
+                        },
+                        child: Text('Batal',
+                            style: GoogleFonts.montserrat(color: Colors.grey.shade600)),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _kButtonGreen,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState?.saveAndValidate() ?? false) {
+                            final formData = _formKey.currentState!.value;
+                            if (isEditing) {
+                              controller.submitEditClass(formData);
+                            } else {
+                              controller.submitAddClass(formData);
+                            }
+                          }
+                        },
+                        child: Text(isEditing ? 'Simpan Perubahan' : 'Simpan',
+                            style: GoogleFonts.montserrat(
+                                color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -206,6 +207,7 @@ class KelasPopulerScreenClean extends StatelessWidget {
   }
 
   Widget _buildAddClassButton() {
+    final controller = Get.find<ClassController>();
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -380,7 +382,6 @@ class KelasPopulerScreenClean extends StatelessWidget {
             ),
           ),
         ),
-        // Tambahan Checkbox
         Checkbox(
           value: isCompleted, 
           onChanged: (val) => onToggleComplete(),
@@ -450,6 +451,7 @@ class KelasPopulerScreenClean extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<ClassController>();
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(80.0),
@@ -512,20 +514,8 @@ class KelasPopulerScreenClean extends StatelessWidget {
                 return Center(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 50.0),
-                    child: Text(
-                      'Gagal memuat data: \n${controller.errorMessage.value}',
-                      style: GoogleFonts.montserrat(
-                          color: Colors.red, fontWeight: FontWeight.w500),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                );
-              } else if (controller.filteredClasses.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 50.0),
-                    child: Text('Tidak ada kelas di kategori yang dipilih.',
-                        style: GoogleFonts.montserrat(color: Colors.grey)),
+                    child: Text('Terjadi error: ${controller.errorMessage}',
+                        style: GoogleFonts.montserrat(color: Colors.red)),
                   ),
                 );
               }
