@@ -9,11 +9,8 @@ class AuthCheckController extends GetxController {
   void onReady() {
     super.onReady();
     _auth.authStateChanges().listen((User? user) {
-      if (user == null) {
-        Get.offAllNamed(AppRoutes.login);
-      } else {
-        Get.offAllNamed(AppRoutes.mainDashboard);
-      }
+      if (user == null) Get.offAllNamed(AppRoutes.login);
+      else Get.offAllNamed(AppRoutes.mainDashboard);
     });
   }
 }
