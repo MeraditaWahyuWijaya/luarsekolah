@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'register_screen.dart';
-import 'package:luarsekolah/data/providers/storage_helper.dart'; 
-import 'package:luarsekolah/data/providers/api_service.dart';
-import 'package:luarsekolah/presentation/widgets/custom_field.dart'; 
+import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart'; 
+import 'package:luarsekolah/presentation/views/register_screen.dart';
+import '/main.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,10 +16,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
-  final ApiService _apiService = ApiService(); // ambil data api_Service.dart
-  bool _isLoading = false; //kenapa false, karena nanti akan berubah jadi true ketika api jalan dan kemblai false lagi
 
+  bool _isLoading = false;
   bool _isPasswordVisible = false;
   bool _isRecaptchaVerified = false;
 
@@ -47,46 +45,37 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        await _apiService.signIn( //API 
-          _emailController.text, 
-          _passwordController.text
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
         );
 
-        await StorageHelper.saveLastEmail(_emailController.text);
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login Berhasil 🎉')),
-        );
+        if (context.mounted) {
+          Get.offAllNamed(AppRoutes.mainDashboard);
+        }
+      } on FirebaseAuthException catch (e) {
+        String errorMessage;
+        if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+          errorMessage = 'Email atau password salah, bestie.';
+        } else if (e.code == 'wrong-password') {
+          errorMessage = 'Password salah, coba lagi, bro.';
+        } else {
+          errorMessage = 'Gagal login: ${e.message}';
+        }
 
-       Navigator.pushAndRemoveUntil(
-          context,
-          PageRouteBuilder(
-            settings: const RouteSettings(name: '/main'),
-            transitionDuration: const Duration(milliseconds: 500),
-            pageBuilder: (context, animation, secondaryAnimation) => const MainScreenWithNavBar(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              const beginOffset = Offset(1.0, 0.0);
-              const endOffset = Offset.zero;
-              const curve = Curves.ease;
-
-              var tween = Tween(begin: beginOffset, end: endOffset).chain(CurveTween(curve: curve));
-              var fadeTween = Tween<double>(begin: 0.0, end: 1.0);
-
-              return SlideTransition(
-                position: animation.drive(tween),
-                child: FadeTransition(
-                  opacity: animation.drive(fadeTween),
-                  child: child,
-                ),
-              );
-            },
-          ),
-        (Route<dynamic> route) => false,
-       );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Login Gagal: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text(
+                'Login Gagal: ${e.toString().replaceFirst('Exception: ', '')}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -103,19 +92,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    loadLastEmail();
-  }
-
-  void loadLastEmail() async {
-    final lastEmail = await StorageHelper.getLastEmail();
-    setState(() {
-      _emailController.text = lastEmail ?? '';
-    });
   }
 
   @override
@@ -142,7 +118,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: GoogleFonts.montserrat(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 24),
-
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -152,13 +127,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10)),
                 ),
-                validator: (value) =>
-                    value == null || value.isEmpty || !value.contains('@')
-                        ? 'Masukkan email yang aktif'
-                        : null,
+                validator: _validateEmail,
               ),
               const SizedBox(height: 20),
-
               TextFormField(
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
@@ -184,7 +155,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 validator: _validatePassword,
               ),
               const SizedBox(height: 16),
-
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -222,12 +192,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: (_isRecaptchaVerified && !_isLoading) ? _handleLogin : null,
+                  onPressed:
+                      (_isRecaptchaVerified && !_isLoading) ? _handleLogin : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromRGBO(7, 126, 96, 1.0),
                     foregroundColor: Colors.white,
@@ -235,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(12)),
                     elevation: 2,
                   ),
-                  child: _isLoading 
+                  child: _isLoading
                       ? const SizedBox(
                           height: 20,
                           width: 20,
@@ -245,14 +215,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         )
                       : Text(
-                        'Masuk',
-                        style: GoogleFonts.montserrat(
-                            fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
+                          'Masuk',
+                          style: GoogleFonts.montserrat(
+                              fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
                 ),
               ),
               const SizedBox(height: 16),
-
               Center(
                 child: InkWell(
                   onTap: () {
