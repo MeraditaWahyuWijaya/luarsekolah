@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "597044733093",
+    "project_id": "luarsekolah-ea54e",
+    "storage_bucket": "luarsekolah-ea54e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:597044733093:android:ad57259780dd85b719594c",
+        "android_client_info": {
+          "package_name": "com.example.luarsekolah"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBE6x4NWnSHi0CsCXb6nV6XEduxBSJvtkc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

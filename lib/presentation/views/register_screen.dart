@@ -1,0 +1,395 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';       
+import 'package:firebase_database/firebase_database.dart'; 
+import 'package:get/get.dart';
+import 'package:luarsekolah/presentation/views/home_screen.dart'; 
+import '/main.dart';
+class RegistrationScreen extends StatefulWidget {
+  const RegistrationScreen({super.key});
+
+  @override
+  State<RegistrationScreen> createState() => _RegistrationScreenState();
+}
+
+class _RegistrationScreenState extends State<RegistrationScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  bool _isLoading = false;
+  String? _recaptchaToken;
+  bool _isRecaptchaVerified = false;
+  bool _isPasswordVisible = false;
+  bool isFormValid = false;
+
+  bool hasMinLength = false;
+  bool hasUppercase = false;
+  bool hasNumberOrSymbol = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(_validatePassword);
+    _nameController.addListener(_updateButtonState);
+    _emailController.addListener(_updateButtonState);
+    _passwordController.addListener(_updateButtonState);
+  }
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  void _updateButtonState() {
+    bool isPasswordAllValid = hasMinLength && hasUppercase && hasNumberOrSymbol;
+
+    setState(() {
+      isFormValid =
+          _isRecaptchaVerified &&
+          _nameController.text.isNotEmpty &&
+          _emailController.text.isNotEmpty &&
+          _emailController.text.contains('@') &&
+          isPasswordAllValid;
+    });
+  }
+
+  void _validatePassword() {
+    final password = _passwordController.text;
+    setState(() {
+      hasMinLength = password.length >= 8;
+      hasUppercase = password.contains(RegExp(r'[A-Z]'));
+      hasNumberOrSymbol =
+          password.contains(RegExp(r'[0-9!@#\$%^&*(),.?":{}|<>]'));
+      _updateButtonState();
+    });
+  }
+
+  void _handleRegistration(BuildContext context) async {
+    if (_formKey.currentState!.validate() && _isRecaptchaVerified) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+        
+        String uid = userCredential.user!.uid;
+        await FirebaseDatabase.instance.ref('users/$uid').set({
+          'name': _nameController.text, 
+          'email': _emailController.text,
+          'registration_date': ServerValue.timestamp,
+        });
+
+        if (context.mounted) {
+          Get.offAllNamed(AppRoutes.mainDashboard);
+        }
+
+      } on FirebaseAuthException catch (e) {
+        String errorMessage;
+        if (e.code == 'weak-password') {
+          errorMessage = 'Password terlalu lemah.';
+        } else if (e.code == 'email-already-in-use') {
+          errorMessage = 'Email sudah terdaftar.';
+        } else {
+          errorMessage = 'Registrasi Gagal: ${e.message}';
+        }
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Registrasi Gagal: ${e.toString().replaceFirst('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } else {
+      if (!_isRecaptchaVerified && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Harap verifikasi reCAPTCHA')),
+        );
+      }
+      _formKey.currentState!.validate();
+    }
+  }
+
+  Widget _buildValidationItem(String text, bool isValid) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        children: [
+          Icon(
+            isValid ? Icons.check_circle : Icons.check_circle_outline,
+            color: isValid ? Colors.green.shade700 : Colors.grey.shade400,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: GoogleFonts.montserrat(
+              fontSize: 14,
+              color: isValid ? Colors.black : Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRegistrationFields(bool isPasswordAllValid) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 3),
+        Image.asset('assets/luarsekolahlogo.png', height: 40),
+        const SizedBox(height: 10),
+        Text("Daftarkan Akun Untuk Lanjut Akses ke Luarsekolah",
+            style: GoogleFonts.montserrat(
+                fontSize: 16, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Text("Satu akun untuk akses Luarsekolah dan Belajar Bekerja",
+            style: GoogleFonts.montserrat(
+                fontSize: 14, color: Colors.grey)),
+        const SizedBox(height: 24),
+        TextFormField(
+            controller: _nameController,
+          decoration: InputDecoration(
+            labelText: 'Nama Lengkap',
+            hintText: 'Masukkan nama lengkapmu',
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8)),
+          ),
+          validator: (value) =>
+              value == null || value.isEmpty ? 'Nama wajib diisi' : null,
+        ),
+        const SizedBox(height: 20),
+        TextFormField(
+            controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: InputDecoration(
+            labelText: 'Email Aktif',
+            hintText: 'Masukkan email yang aktif',
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8)),
+          ),
+          validator: (value) =>
+              value == null || value.isEmpty || !value.contains('@')
+                  ? 'Masukkan email yang valid'
+                  : null,
+        ),
+        const SizedBox(height: 20),
+        TextFormField(
+          controller: _passwordController,
+          obscureText: !_isPasswordVisible,
+          decoration: InputDecoration(
+            labelText: 'Password',
+            hintText: 'Masukkan Password untuk akunmu',
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8)),
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_passwordController.text.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Icon(
+                      isPasswordAllValid ? Icons.check_circle : Icons.cancel,
+                      color: isPasswordAllValid ? Colors.green : Colors.red,
+                    ),
+                  ),
+                IconButton(
+                  icon: Icon(
+                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'Password wajib diisi';
+            if (!isPasswordAllValid) return 'Password belum memenuhi semua kriteria.';
+            return null;
+          },
+        ),
+        const SizedBox(height: 8),
+        _buildValidationItem('Minimal 8 karakter', hasMinLength),
+        _buildValidationItem('Terdapat 1 huruf kapital', hasUppercase),
+        _buildValidationItem('Terdapat 1 angka atau simbol', hasNumberOrSymbol),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade400),
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.grey.shade50,
+          ),
+          child: Row(
+            children: [
+              Checkbox(
+                value: _isRecaptchaVerified,
+                onChanged: (value) {
+                  setState(() {
+                    _isRecaptchaVerified = value ?? false;
+                    _recaptchaToken = _isRecaptchaVerified ? 'dummy-token' : null;
+                  });
+                  _updateButtonState();
+                },
+              ),
+              Expanded(
+                child: Text(
+                  "I'm not a robot",
+                  style: GoogleFonts.montserrat(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: _isRecaptchaVerified ? Colors.black : Colors.black87,
+                  ),
+                ),
+              ),
+              Image.asset(
+                'assets/recaptcha.png',
+                height: 50,
+                width: 50,
+                fit: BoxFit.contain,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 45),
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: (isFormValid && !_isLoading) ? () => _handleRegistration(context) : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isFormValid && !_isLoading
+                  ? const Color.fromRGBO(7, 126, 96, 1.0)
+                  : Colors.grey,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 2,
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 3,
+                    ),
+                  )
+                : Text(
+                    'Daftarkan Akun',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        RichText(
+          text: TextSpan(
+            style: GoogleFonts.montserrat(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey, 
+            ),
+            children: [
+              const TextSpan(text: "Dengan mendaftar di Luarsekolah, kamu menyetujui "),
+              TextSpan(
+                text: "syarat dan ketentuan kami",
+                style: const TextStyle(
+                  color: Color.fromARGB(255, 102, 178, 255), 
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Center(
+          child: InkWell( 
+            onTap: () { 
+              Navigator.pushNamed( 
+                context, 
+                AppRoutes.login,
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 220, 233, 255),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color.fromARGB(255, 23, 137, 230),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset('assets/havinghand.png', height: 20, width: 20),
+                  const SizedBox(width: 5),
+                  Text(
+                    "Sudah punya akun? Masuk ke akunmu",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: const Color.fromARGB(255, 23, 137, 230),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 30),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    bool isPasswordAllValid = hasMinLength && hasUppercase && hasNumberOrSymbol;
+
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: _buildRegistrationFields(isPasswordAllValid),
+          ),
+        ),
+      ),
+    );
+  }
+}
