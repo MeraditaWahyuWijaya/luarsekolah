@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "597044733093",
+    "firebase_url": "https://luarsekolah-ea54e-default-rtdb.firebaseio.com",
     "project_id": "luarsekolah-ea54e",
     "storage_bucket": "luarsekolah-ea54e.firebasestorage.app"
   },
@@ -12,7 +13,12 @@
           "package_name": "com.example.luarsekolah"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "597044733093-udlae3c10p9v8cpdufis85h0to28ldan.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBE6x4NWnSHi0CsCXb6nV6XEduxBSJvtkc"
@@ -20,7 +26,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "597044733093-udlae3c10p9v8cpdufis85h0to28ldan.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "597044733093-kvjd1km72tkq7260dduppqi9vtv93481.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.luarsekolah"
+              }
+            }
+          ]
         }
       }
     }

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Todo {
   final String id;
   final String text;
@@ -18,9 +20,18 @@ class Todo {
       id: json['id'] as String,
       text: json['text'] as String,
       completed: json['completed'] as bool,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      createdAt: (json['createdAt'] as Timestamp).toDate(),
+      updatedAt: (json['updatedAt'] as Timestamp).toDate(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'text': text,
+      'completed': completed,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+    };
   }
 
   Todo copyWith({

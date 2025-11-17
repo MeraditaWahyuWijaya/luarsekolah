@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:luarsekolah/presentation/bindings/todo_binding.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:luarsekolah/presentation/controllers/todo_controllers.dart';
 import 'package:luarsekolah/domain/entities/todo.dart';
 import 'package:luarsekolah/presentation/widgets/todo_list_tile.dart';
@@ -8,11 +8,11 @@ import 'package:luarsekolah/presentation/widgets/todo_list_tile.dart';
 extension _ColorShade on Color {
   Color darken({double amount = .2}) {
     final hsl = HSLColor.fromColor(this);
-    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+    final hslDark =
+        hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
     return hslDark.toColor();
   }
 }
-
 
 class TodoDashboardPage extends StatelessWidget {
   const TodoDashboardPage({super.key});
@@ -26,8 +26,8 @@ class TodoDashboardPage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Muat ulang dari API',
-            onPressed: () { controller.refreshTodos();},
+            tooltip: 'Muat ulang dari Firestore',
+            onPressed: controller.refreshTodos,
           ),
         ],
       ),
@@ -65,7 +65,7 @@ class TodoDashboardPage extends StatelessWidget {
                             SizedBox(height: 120),
                             Center(
                               child: Text(
-                                'Belum ada todo untuk filter ini. Tambahkan tugas baru!',
+                                'Belum ada todo. Tambahkan tugas baru!',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(color: Colors.grey),
                               ),
@@ -80,7 +80,7 @@ class TodoDashboardPage extends StatelessWidget {
                           final todo = todos[index];
                           return TodoListTile(
                             todo: todo,
-                            onToggle: () => _toggle(todo.id),
+                            onToggle: () => controller.toggleTodo(todo.id),
                             onDelete: () => _confirmDelete(context, todo),
                           );
                         },
@@ -98,11 +98,11 @@ class TodoDashboardPage extends StatelessWidget {
     );
   }
 
-  Future<void> _openCreateSheet(BuildContext context, TodoController controller) async {
+  Future<void> _openCreateSheet(
+      BuildContext context, TodoController controller) async {
     final textController = TextEditingController();
-    final descriptionController = TextEditingController(); 
 
-    final result = await Get.bottomSheet<Map<String, String>?>(
+    final result = await Get.bottomSheet<String>(
       Padding(
         padding: EdgeInsets.only(
           left: 16,
@@ -116,134 +116,86 @@ class TodoDashboardPage extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  title: Text(
-                    'Buat Tugas Baru',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Get.back(),
-                  ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Buat Tugas Baru',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                trailing: IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => Get.back(),
                 ),
-
-                const Divider(height: 1), 
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextField(
-                        controller: textController,
-                        autofocus: true,
-                        maxLength: 80,
-                        decoration: InputDecoration(
-                          labelText: 'Judul Tugas',
-                          hintText: 'Cth: Berenang',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          counterText: '',
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      TextField(
-                        controller: descriptionController,
-                        maxLines: 4,
-                        maxLength: 250,
-                        decoration: InputDecoration(
-                          labelText: 'Deskripsi',
-                          hintText: 'Jelaskan detail yang perlu dilakukan (Opsional)',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          alignLabelWithHint: true,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Obx(
-                      () {
-                        final bool isSaving = controller.isLoading.value;
-                        return FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            )
-                          ),
-                          onPressed: isSaving ? null : () {
-                            final title = textController.text.trim();
-                            
-                            if (title.isEmpty) {
-                              Get.snackbar('Perhatian', 'Judul tugas tidak boleh kosong.',
-                                snackPosition: SnackPosition.BOTTOM,
-                                backgroundColor: Colors.orange.shade400,
-                                colorText: Colors.white,
-                              );
-                              return;
-                            }
-
-                            Get.back(result: {
-                              'title': title, 
-                              'description': descriptionController.text.trim(),
-                            });
-                          },
-                          icon: isSaving 
-                          ? const SizedBox(
-                              height: 18, 
-                              width: 18, 
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Icon(Icons.check_circle_outline),
-
-                          label: Text(
-                            isSaving ?
-                            'Memproses...' : 'SIMPAN TUGAS',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        );
-                      },
+              ),
+              const Divider(height: 1),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: TextField(
+                  controller: textController,
+                  autofocus: true,
+                  maxLength: 80,
+                  decoration: InputDecoration(
+                    labelText: 'Judul Tugas',
+                    hintText: 'Cth: Berenang',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    counterText: '',
                   ),
                 ),
-              ],
-            ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Obx(
+                    () {
+                      final isSaving = controller.isLoading.value;
+                      return FilledButton.icon(
+                        onPressed: isSaving
+                            ? null
+                            : () {
+                                final title = textController.text.trim();
+                                if (title.isEmpty) {
+                                  Get.snackbar('Perhatian',
+                                      'Judul tugas tidak boleh kosong.',
+                                      snackPosition: SnackPosition.BOTTOM,
+                                      backgroundColor: Colors.orange.shade400,
+                                      colorText: Colors.white);
+                                  return;
+                                }
+                                Get.back(result: title);
+                              },
+                        icon: isSaving
+                            ? const SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.check_circle_outline),
+                        label: Text(
+                          isSaving ? 'Memproses...' : 'SIMPAN TUGAS',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
 
-    if (result == null) return;
-    if (result is! Map<String, String>) return;
-    
-    final title = result['title']!;
-    final description = result['description']!;
-    
-    await controller.addTodo(title, description);
-    
-    textController.dispose();
-    descriptionController.dispose();
+    if (result != null) {
+      await controller.addTodo(result);
+    }
   }
 
   Future<void> _confirmDelete(BuildContext context, Todo todo) async {
@@ -251,33 +203,26 @@ class TodoDashboardPage extends StatelessWidget {
     final confirm = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('Hapus Todo'),
-        content: Text('Apakah Anda yakin ingin menghapus todo:\n"${todo.text}"?'),
+        content: Text('Apakah yakin ingin menghapus todo:\n"${todo.text}"?'),
         actions: [
           TextButton(
-            onPressed: () => Get.back(result: false),
-            child: const Text('Batal'),
-          ),
+              onPressed: () => Get.back(result: false),
+              child: const Text('Batal')),
           FilledButton(
-            onPressed: () => Get.back(result: true),
-            child: const Text('Hapus'),
-          ),
+              onPressed: () => Get.back(result: true),
+              child: const Text('Hapus')),
         ],
       ),
     );
-    if (confirm != true) return;
 
-    await controller.deleteTodo(todo.id);
-  }
-
-  Future<void> _toggle(String id) async {
-    final controller = Get.find<TodoController>();
-    await controller.toggleTodo(id);
+    if (confirm == true) await controller.deleteTodo(todo.id);
   }
 }
 
+/// ================= Internal Widgets =================
+
 class _AnalyticsHeader extends StatelessWidget {
   const _AnalyticsHeader({required this.controller});
-
   final TodoController controller;
 
   @override
@@ -318,12 +263,11 @@ class _AnalyticsHeader extends StatelessWidget {
 }
 
 class _MetricCard extends StatelessWidget {
-  const _MetricCard({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
+  const _MetricCard(
+      {required this.label,
+      required this.value,
+      required this.icon,
+      required this.color});
 
   final String label;
   final String value;
@@ -339,29 +283,25 @@ class _MetricCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withOpacity(0.2)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color.darken(),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(label, style: Theme.of(context).textTheme.bodyMedium),
-        ],
-      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Icon(icon, color: color),
+        const SizedBox(height: 12),
+        Text(
+          value,
+          style: Theme.of(context)
+              .textTheme
+              .headlineSmall
+              ?.copyWith(fontWeight: FontWeight.bold, color: color.darken()),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
+      ]),
     );
   }
 }
 
 class _FilterChips extends StatelessWidget {
   const _FilterChips({required this.controller});
-
   final TodoController controller;
 
   @override
@@ -371,7 +311,7 @@ class _FilterChips extends StatelessWidget {
         spacing: 12,
         runSpacing: 8,
         children: TodoFilter.values.map((filter) {
-          final bool selected = controller.filter.value == filter;
+          final selected = controller.filter.value == filter;
           return FilterChip(
             label: Text(_label(filter)),
             selected: selected,
@@ -396,7 +336,6 @@ class _FilterChips extends StatelessWidget {
 
 class _ErrorBanner extends StatelessWidget {
   const _ErrorBanner({required this.message});
-
   final String message;
 
   @override
@@ -414,9 +353,7 @@ class _ErrorBanner extends StatelessWidget {
         children: [
           const Icon(Icons.error_outline, color: Colors.red),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(message, style: const TextStyle(color: Colors.red)),
-          ),
+          Expanded(child: Text(message, style: const TextStyle(color: Colors.red))),
         ],
       ),
     );

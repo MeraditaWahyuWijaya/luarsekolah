@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'register_screen.dart';
 import 'package:luarsekolah/data/providers/storage_helper.dart'; 
-import 'package:luarsekolah/data/providers/api_service.dart';
+import 'package:luarsekolah/data/providers/firebase_auth_service.dart'; // <<< Tambahkan Firebase Auth Service
+import 'package:luarsekolah/presentation/views/register_screen.dart'; 
 import 'package:luarsekolah/presentation/widgets/custom_field.dart'; 
+import 'package:luarsekolah/presentation/controllers/auth_controller.dart';
+import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';// <<< Tambahkan import untuk navigasi
+import '/main.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,12 +21,15 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   
-  final ApiService _apiService = ApiService(); // ambil data api_Service.dart
-  bool _isLoading = false; //kenapa false, karena nanti akan berubah jadi true ketika api jalan dan kemblai false lagi
-
+  // Ganti inisialisasi ApiService dengan FirebaseAuthService
+  final FirebaseAuthService _authService = FirebaseAuthService();
+  
+  bool _isLoading = false; 
   bool _isPasswordVisible = false;
+  // reCAPTCHA hanya simulasi, pertahankan logikanya untuk UI
   bool _isRecaptchaVerified = false;
 
+  // Validator yang diperbarui (Tidak wajib diubah, tapi rapihkan yang di bawah)
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) return 'Email wajib diisi';
     if (!value.contains('@')) return 'Masukkan email yang valid';
@@ -47,18 +54,23 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        await _apiService.signIn( //API 
-          _emailController.text, 
-          _passwordController.text
-        );
+        // <<< BAGIAN UTAMA YANG BERUBAH: PANGGIL FIREBASE AUTH SERVICE
+         final authController = Get.find<AuthController>();
+        await authController.login(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
 
+
+        // Jika login berhasil, simpan email dan navigasi.
         await StorageHelper.saveLastEmail(_emailController.text);
         
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login Berhasil 🎉')),
         );
 
-       Navigator.pushAndRemoveUntil(
+        // Navigasi ke MainScreenWithNavBar
+        Navigator.pushAndRemoveUntil(
           context,
           PageRouteBuilder(
             settings: const RouteSettings(name: '/main'),
@@ -81,12 +93,15 @@ class _LoginScreenState extends State<LoginScreen> {
               );
             },
           ),
-        (Route<dynamic> route) => false,
-       );
+          (Route<dynamic> route) => false,
+        );
       } catch (e) {
+        // Tangani Exception dari Firebase Auth Service
+        String errorMessage = e.toString().replaceFirst('Exception: ', '');
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Login Gagal: ${e.toString().replaceFirst('Exception: ', '')}'),
+            content: Text('Login Gagal: $errorMessage'),
             backgroundColor: Colors.red,
           ),
         );
@@ -129,7 +144,8 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 50),
-              Image.asset('assets/luarsekolahlogo.png', height: 50),
+              // Ganti Image.asset sesuai kebutuhan (asumsi asset ada)
+              Image.asset('assets/luarsekolahlogo.png', height: 50), 
               const SizedBox(height: 12),
               Text(
                 "Masuk ke Akun Luarsekolah dan Akses Materi dan Belajar Bekerja",
@@ -212,12 +228,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
+                    //Ganti Image.asset sesuai kebutuhan (asumsi asset ada)
                     Image.asset(
-                      'assets/recaptcha.png',
-                      height: 30,
-                      width: 30,
-                      fit: BoxFit.contain,
-                    ),
+                    'assets/recaptcha.png',
+                       height: 30,
+                       width: 30,
+                       fit: BoxFit.contain,
+                     ),
                   ],
                 ),
               ),
@@ -245,10 +262,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         )
                       : Text(
-                        'Masuk',
-                        style: GoogleFonts.montserrat(
-                            fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
+                          'Masuk',
+                          style: GoogleFonts.montserrat(
+                              fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
                 ),
               ),
               const SizedBox(height: 16),

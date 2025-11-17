@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:luarsekolah/presentation/widgets/hover_card.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:luarsekolah/data/providers/firebase_auth_service.dart';
+
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,7 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final Color primaryGreen = const Color.fromRGBO(7, 126, 96, 1);
-
+  final User? user = FirebaseAuth.instance.currentUser; // ambil user di build atau initState
   final List<String> bannerImages = [
     'assets/banner.png',
     'assets/bannercar1.jpg',
@@ -374,22 +378,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
                   children: [
-                    const CircleAvatar(
-                      backgroundImage: AssetImage('assets/nailong.jpg'),
-                      radius: 18,
-                    ),
+                   CircleAvatar(
+                    backgroundImage: user?.photoURL != null
+                        ? NetworkImage(user!.photoURL!)
+                        : const AssetImage('assets/nailong.jpg') as ImageProvider,
+                    radius: 18,
+                  ),
                     const SizedBox(width: 12),
+
+
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children:[
                         Text(
                           'Halo,',
                           style:
                               TextStyle(fontSize: 12, color: Colors.white70),
                         ),
                         Text(
-                          'Meraditaa',
+                          user?.displayName ?? 'User',
                           style: TextStyle(
                               fontWeight: FontWeight.w500,
                               fontSize: 16,

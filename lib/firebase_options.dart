@@ -46,6 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '597044733093',
     projectId: 'luarsekolah-ea54e',
     authDomain: 'luarsekolah-ea54e.firebaseapp.com',
+    databaseURL: 'https://luarsekolah-ea54e-default-rtdb.firebaseio.com',
     storageBucket: 'luarsekolah-ea54e.firebasestorage.app',
     measurementId: 'G-Q0J8Q4JHQJ',
   );
@@ -55,6 +56,7 @@ class DefaultFirebaseOptions {
     appId: '1:597044733093:android:ad57259780dd85b719594c',
     messagingSenderId: '597044733093',
     projectId: 'luarsekolah-ea54e',
+    databaseURL: 'https://luarsekolah-ea54e-default-rtdb.firebaseio.com',
     storageBucket: 'luarsekolah-ea54e.firebasestorage.app',
   );
 
@@ -63,7 +65,9 @@ class DefaultFirebaseOptions {
     appId: '1:597044733093:ios:c2431c2fd8459d7819594c',
     messagingSenderId: '597044733093',
     projectId: 'luarsekolah-ea54e',
+    databaseURL: 'https://luarsekolah-ea54e-default-rtdb.firebaseio.com',
     storageBucket: 'luarsekolah-ea54e.firebasestorage.app',
+    iosClientId: '597044733093-kvjd1km72tkq7260dduppqi9vtv93481.apps.googleusercontent.com',
     iosBundleId: 'com.example.luarsekolah',
   );
 
@@ -72,7 +76,9 @@ class DefaultFirebaseOptions {
     appId: '1:597044733093:ios:c2431c2fd8459d7819594c',
     messagingSenderId: '597044733093',
     projectId: 'luarsekolah-ea54e',
+    databaseURL: 'https://luarsekolah-ea54e-default-rtdb.firebaseio.com',
     storageBucket: 'luarsekolah-ea54e.firebasestorage.app',
+    iosClientId: '597044733093-kvjd1km72tkq7260dduppqi9vtv93481.apps.googleusercontent.com',
     iosBundleId: 'com.example.luarsekolah',
   );
 
@@ -82,7 +88,9 @@ class DefaultFirebaseOptions {
     messagingSenderId: '597044733093',
     projectId: 'luarsekolah-ea54e',
     authDomain: 'luarsekolah-ea54e.firebaseapp.com',
+    databaseURL: 'https://luarsekolah-ea54e-default-rtdb.firebaseio.com',
     storageBucket: 'luarsekolah-ea54e.firebasestorage.app',
     measurementId: 'G-W74CZF0ZZM',
   );
+
 }

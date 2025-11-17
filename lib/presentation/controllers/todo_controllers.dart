@@ -1,67 +1,82 @@
 import 'package:get/get.dart';
 import 'package:luarsekolah/domain/entities/todo.dart';
-import 'package:luarsekolah/domain/usecases/fetch_todos_use_case.dart';
-import 'package:luarsekolah/domain/repositories/i_todo_repository.dart';
+import 'package:luarsekolah/data/providers/todo_firestore_service.dart';
 import 'package:flutter/material.dart';
 
-enum TodoFilter { all, completed, pending } 
+// Enum untuk filter todo di UI
+enum TodoFilter { all, completed, pending }
 
 class TodoController extends GetxController {
-  final FetchTodosUseCase _fetchTodosUseCase;
-  final ITodoRepository _repository; 
-  
-  TodoController(this._fetchTodosUseCase, this._repository);
-  
-  var todos = <Todo>[].obs; 
-  var isLoading = false.obs; 
-  var errorMessage = Rxn<String>(); 
-  var filter = TodoFilter.all.obs; 
+  final TodoFirestoreService _firestoreService;
+
+  // List todo observable agar UI otomatis refresh saat berubah
+  var todos = <Todo>[].obs;
+
+  // Status loading dan error
+  var isLoading = false.obs;
+  var errorMessage = Rxn<String>();
+
+  // Filter todo
+  var filter = TodoFilter.all.obs;
+
+  // Stream listener dari Firestore
+  Stream<List<Todo>>? _todoStream;
+  late Rx<Stream<List<Todo>>> _streamObs;
+
+  TodoController(this._firestoreService);
 
   @override
   void onInit() {
-    refreshTodos();
     super.onInit();
+    // Mulai stream realtime dari Firestore
+    _todoStream = _firestoreService.streamTodos();
+    _streamObs = _todoStream!.obs;
+    // Listen stream setiap update
+    ever(_streamObs, (_) => _listenTodos());
+    _listenTodos();
   }
 
+  // Mendengarkan perubahan todo dari Firestore
+  void _listenTodos() {
+    isLoading(true);
+    try {
+      _todoStream?.listen((list) {
+        todos.assignAll(list); // update list observable
+        isLoading(false);
+      });
+    } catch (e) {
+      errorMessage('Gagal memuat data: $e');
+      isLoading(false);
+    }
+  }
+
+  // Filtered list untuk UI
   List<Todo> get filteredTodos {
     switch (filter.value) {
       case TodoFilter.completed:
-        return todos.where((todo) => todo.completed).toList();
+        return todos.where((t) => t.completed).toList();
       case TodoFilter.pending:
-        return todos.where((todo) => !todo.completed).toList();
+        return todos.where((t) => !t.completed).toList();
       case TodoFilter.all:
       default:
         return todos.toList();
     }
   }
-  
-  int get completedCount => todos.where((todo) => todo.completed).length;
+
+  int get completedCount => todos.where((t) => t.completed).length;
   double get completionRate => todos.isEmpty ? 0.0 : completedCount / todos.length;
 
+  // Set filter
   void setFilter(TodoFilter newFilter) {
     filter.value = newFilter;
   }
 
-  Future<void> refreshTodos() async {
-    isLoading(true);
-    errorMessage(null);
-    try {
-      final fetchedTodos = await _fetchTodosUseCase.execute();
-      todos.assignAll(fetchedTodos);
-    } catch (e) {
-      errorMessage('Gagal memuat data: ${e.toString()}');
-    } finally {
-      isLoading(false);
-    }
-  }
-
-  Future<void> addTodo(String text, String description) async {
+  // Tambah todo baru ke Firestore
+  Future<void> addTodo(String text) async {
     if (text.isEmpty) return;
-    isLoading(true); 
+    isLoading(true);
     try {
-      final newTodo = await _repository.createTodo(text, description);
-      todos.insert(0, newTodo); 
-      Get.back();
+      await _firestoreService.createTodo(text); // hanya text, tanpa deskripsi
       Get.snackbar(
         'Sukses',
         'Todo berhasil ditambahkan!',
@@ -78,23 +93,24 @@ class TodoController extends GetxController {
         colorText: Colors.white,
       );
     } finally {
-      isLoading(false); 
+      isLoading(false);
     }
   }
 
+  // Toggle status todo (selesai / belum)
   Future<void> toggleTodo(String id) async {
-    final todoIndex = todos.indexWhere((item) => item.id == id);
+    final todoIndex = todos.indexWhere((t) => t.id == id);
     if (todoIndex == -1) return;
 
     final oldTodo = todos[todoIndex];
-    final oldCompleted = oldTodo.completed;
-    todos[todoIndex] = oldTodo.copyWith(completed: !oldCompleted); 
-    todos.refresh(); 
+    todos[todoIndex] = oldTodo.copyWith(completed: !oldTodo.completed);
+    todos.refresh();
 
     try {
-      await _repository.toggleTodo(id); 
+      await _firestoreService.toggleTodo(id, oldTodo.completed);
     } catch (e) {
-      todos[todoIndex] = oldTodo.copyWith(completed: oldCompleted);
+      // rollback jika toggle gagal
+      todos[todoIndex] = oldTodo;
       todos.refresh();
       Get.snackbar(
         'Error Toggle',
@@ -106,23 +122,26 @@ class TodoController extends GetxController {
     }
   }
 
+  // Hapus todo
   Future<void> deleteTodo(String id) async {
-    final todoIndex = todos.indexWhere((item) => item.id == id);
+    final todoIndex = todos.indexWhere((t) => t.id == id);
     if (todoIndex == -1) return;
-    
-    final deletedTodo = todos.removeAt(todoIndex); 
+
+    final deletedTodo = todos.removeAt(todoIndex);
+    todos.refresh();
 
     try {
-      await _repository.deleteTodo(id);
+      await _firestoreService.deleteTodo(id);
       Get.snackbar(
         'Dihapus',
-        'Todo berhasil dihapus.',
+        'Todo berhasil dihapus',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.orange.shade400,
         colorText: Colors.white,
       );
     } catch (e) {
-      todos.insert(todoIndex, deletedTodo); 
+      // rollback jika delete gagal
+      todos.insert(todoIndex, deletedTodo);
       todos.refresh();
       Get.snackbar(
         'Error Hapus',
@@ -133,4 +152,18 @@ class TodoController extends GetxController {
       );
     }
   }
+
+  //Refresh manual (opsional, untuk tombol refresh)
+  Future<void> refreshTodos() async {
+    isLoading(true);
+    try {
+    final list = await _firestoreService.fetchTodos();
+    todos.assignAll(list);
+    } catch (e) {
+  errorMessage('Gagal refresh: $e');
+    } finally {
+      isLoading(false);
+    }
+  }
+
 }

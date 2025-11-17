@@ -1,29 +1,22 @@
-import 'package:luarsekolah/domain/repositories/i_todo_repository.dart';
 import 'package:luarsekolah/domain/entities/todo.dart';
-import 'package:luarsekolah/data/providers/todo_api_service.dart';
+import 'package:luarsekolah/domain/repositories/i_todo_repository.dart';
+import 'package:luarsekolah/data/providers/todo_firestore_service.dart';
 
 class TodoRepository implements ITodoRepository {
-  final TodoApiService _apiService;
+  final TodoFirestoreService _service;
 
- TodoRepository(this._apiService);
-
-  @override
-  Future<List<Todo>> getTodos() async {
-     return await _apiService.fetchTodos();
-  }
+  TodoRepository(this._service);
 
   @override
-  Future<Todo> createTodo(String title, String description) {
-    return _apiService.createTodo(title, description);
-  }
+  Future<List<Todo>> getTodos() => _service.fetchTodos();
 
   @override
-  Future<void> toggleTodo(String id) {
-    return _apiService.toggleTodo(id);
-  }
+  Future<Todo> createTodo(String text) => _service.createTodo(text);
 
   @override
-  Future<void> deleteTodo(String id) {
-    return _apiService.deleteTodo(id);
-  }
+  Future<void> toggleTodo(String id, bool completed) =>
+      _service.toggleTodo(id, completed);
+
+  @override
+  Future<void> deleteTodo(String id) => _service.deleteTodo(id);
 }

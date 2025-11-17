@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:luarsekolah/presentation/views/profile_image_full_screen.dart';
+import 'package:luarsekolah/presentation/views/login_screen.dart'; // pastikan path sesuai
 
 class ProfileFormScreen extends StatefulWidget {
   const ProfileFormScreen({super.key});
@@ -18,33 +20,28 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
 
   String? _selectedGender;
   String? _jobStatus;
-
   bool _isFormFilled = false;
+
+  User? _firebaseUser;
 
   @override
   void initState() {
     super.initState();
-    _loadSavedData();
+    _loadUserData();
   }
 
-  Future<void> _loadSavedData() async {
+  Future<void> _loadUserData() async {
+    _firebaseUser = FirebaseAuth.instance.currentUser;
+
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _nameController.text = prefs.getString('userName') ?? '';
+      _nameController.text = _firebaseUser?.displayName ?? prefs.getString('userName') ?? '';
       _dobController.text = prefs.getString('userDOB') ?? '';
       _addressController.text = prefs.getString('userAddress') ?? '';
-
-      final genderFromPrefs = prefs.getString('userGender');
-      _selectedGender = (genderFromPrefs == 'Laki-laki' || genderFromPrefs == 'Perempuan')
-          ? genderFromPrefs
-          : null;
-
-      final jobFromPrefs = prefs.getString('userJobStatus');
-      _jobStatus = (jobFromPrefs != null &&
-          ["Pelajar", "Mahasiswa", "Karyawan", "Lainnya"].contains(jobFromPrefs))
-          ? jobFromPrefs
-          : null;
+      _selectedGender = prefs.getString('userGender');
+      _jobStatus = prefs.getString('userJobStatus');
     });
+
     _checkFormFilled();
   }
 
@@ -67,6 +64,13 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
       await prefs.setString('userJobStatus', _jobStatus ?? '');
       await prefs.setString('userAddress', _addressController.text);
 
+      // update Firebase displayName
+      if (_firebaseUser != null) {
+        await _firebaseUser!.updateDisplayName(_nameController.text);
+        await _firebaseUser!.reload();
+        _firebaseUser = FirebaseAuth.instance.currentUser;
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -75,6 +79,20 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
     }
   }
 
@@ -91,6 +109,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Profile header
                 Row(
                   children: [
                     Hero(
@@ -128,19 +147,20 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 ),
                 const SizedBox(height: 15),
 
+                // Foto section
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, 
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ProfileImageFullScreen(), 
+                            builder: (context) => const ProfileImageFullScreen(),
                           ),
                         );
                       },
-                      child: Hero( //pake hero disiniiiii
+                      child: Hero(
                         tag: 'profile-image-hero-tag',
                         child: ClipOval(
                           child: Image.asset(
@@ -161,13 +181,10 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                     const SizedBox(height: 10),
                     Center(
                       child: SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.8, 
-                        
+                        width: MediaQuery.of(context).size.width * 0.8,
                         child: OutlinedButton.icon(
-                          onPressed: () {
-                          },
+                          onPressed: () {},
                           style: OutlinedButton.styleFrom(
-                            
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -183,7 +200,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                     )
                   ],
                 ),
-                
 
                 const SizedBox(height: 20),
                 Text("Data Diri",
@@ -196,7 +212,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   label: "Nama Lengkap",
                   hint: "Masukkan nama lengkap",
                 ),
-
                 _buildTextField(
                   controller: _dobController,
                   label: "Tanggal Lahir",
@@ -205,7 +220,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   onTap: () async {
                     FocusScope.of(context).requestFocus(FocusNode());
                     DateTime? pickedDate = await showDatePicker(
-                      context: context, 
+                      context: context,
                       initialDate: DateTime.now(),
                       firstDate: DateTime(1900),
                       lastDate: DateTime.now(),
@@ -216,17 +231,15 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                     }
                   },
                 ),
-
                 _buildDropdownField(
                   label: "Jenis Kelamin",
                   value: _selectedGender,
                   items: const ["Laki-laki", "Perempuan"],
                   onChanged: (val) {
-                        setState(() => _selectedGender = val);
+                    setState(() => _selectedGender = val);
                     _checkFormFilled();
                   },
                 ),
-
                 _buildDropdownField(
                   label: "Status Pekerjaan",
                   value: _jobStatus,
@@ -236,7 +249,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                     _checkFormFilled();
                   },
                 ),
-
                 _buildTextField(
                   controller: _addressController,
                   label: "Alamat Lengkap",
@@ -257,6 +269,22 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                     style: GoogleFonts.montserrat(
                         fontWeight: FontWeight.w600,
                         color: _isFormFilled ? Colors.white : Colors.green.shade700),
+                  ),
+                ),
+                
+                const SizedBox(height: 10),
+                
+                // Logout button
+                ElevatedButton(
+                  onPressed: _logout,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                  child: Text(
+                    "Logout",
+                    style: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.w600, color: Colors.white),
                   ),
                 ),
               ],
@@ -318,17 +346,15 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
           Text(label, style: GoogleFonts.montserrat(fontSize: 14)),
           const SizedBox(height: 5),
           DropdownButtonFormField<String>(
-            initialValue: value,
+            value: value,
             decoration: InputDecoration(
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               contentPadding: const EdgeInsets.all(12),
             ),
             hint: Text("Pilih $label".toLowerCase(),
                 style: GoogleFonts.montserrat(fontSize: 13)),
             items: items
-                .map((item) =>
-                    DropdownMenuItem(value: item, child: Text(item)))
+                .map((item) => DropdownMenuItem(value: item, child: Text(item)))
                 .toList(),
             onChanged: onChanged,
             validator: (val) => val == null ? "Pilih $label" : null,

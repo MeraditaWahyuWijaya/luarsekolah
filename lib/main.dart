@@ -8,6 +8,10 @@ import 'package:luarsekolah/presentation/views/class_screen.dart';
 import 'package:luarsekolah/presentation/views/login_screen.dart'; 
 import 'package:luarsekolah/presentation/views/register_screen.dart'; 
 import 'package:luarsekolah/presentation/views/coin_ls_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:luarsekolah/presentation/bindings/auth_binding.dart';
+
 
 class AppRoutes {
   static const String register = '/register'; 
@@ -16,7 +20,11 @@ class AppRoutes {
   static const String classDashboard = '/kelas'; 
 }
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();//binding
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  ); //inisialisasi firebase
   runApp(const MyApp());
 }
 
@@ -39,10 +47,12 @@ class MyApp extends StatelessWidget {
         GetPage(
           name: AppRoutes.register,
           page: () => const RegistrationScreen(),
+           binding: AuthBinding(),
         ),
         GetPage(
           name: AppRoutes.login,
           page: () => const LoginScreen(),
+          binding: AuthBinding()
         ),
         
         GetPage(

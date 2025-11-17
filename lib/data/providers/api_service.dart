@@ -14,23 +14,35 @@ class ApiService {
 
   final String _baseUrl = 'https://ls-lms.zoidify.my.id/api';
 
+  // Catatan: _accessToken ini harus diisi secara manual 
+  // setelah berhasil login menggunakan sistem otentikasi API lama
+  // Jika kamu sudah pindah total ke Firebase, token ini mungkin tidak lagi relevan
+  // untuk data user, tetapi mungkin masih relevan untuk data kursus.
   String? _accessToken;
 
+  // Dipanggil saat aplikasi diinisialisasi
   Future<void> initializeToken() async {
     _accessToken ??= await StorageHelper.getAccessToken();
+  }
+  
+  // Set token secara manual (misalnya setelah login via API lama)
+  // Ini mungkin kamu butuhkan jika API lama masih dipakai untuk kursus
+  void setAccessToken(String token) {
+    _accessToken = token;
   }
 
   Future<Map<String, String>> getAuthHeaders({bool isMultipart = false}) async { 
     _accessToken ??= await StorageHelper.getAccessToken();
 
     if (_accessToken == null) {
-      throw Exception('Akses ditolak. Mohon login terlebih dahulu.');
+      // PENTING: Untuk API lama, kita masih harus throw error jika token tidak ada
+      throw Exception('Akses ditolak. Mohon login terlebih dahulu (Memerlukan token API lama).');
     }
     
     if (isMultipart) {
-        return {
-          'Authorization': 'Bearer $_accessToken',
-        };
+      return {
+        'Authorization': 'Bearer $_accessToken',
+      };
     }
     
     return {
@@ -39,73 +51,7 @@ class ApiService {
     };
   }
 
-  Future<void> signUp({ 
-    required String name, 
-    required String email, 
-    required String phone, 
-    required String password,
-  }) async {
-    final url = Uri.parse('$_baseUrl/auth/sign-up/email'); 
-    
-    final response = await http.post(
-      url,
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{ 
-        'name': name,
-        'email': email,
-        'phone': phone, 
-        'password': password,
-      }),
-    );
-
-    if (response.statusCode != 201 && response.statusCode != 200) {
-      final errorData = jsonDecode(response.body);
-      final message = errorData['message'] ?? 'Gagal registrasi.';
-      throw Exception('Registrasi Gagal. Status: ${response.statusCode}. Pesan: $message');
-    }
-  }
-
-  Future<void> signIn(String email, String password) async {
-    final url = Uri.parse('$_baseUrl/auth/sign-in/email');
-    
-    final response = await http.post(
-      url,
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'email': email,
-        'password': password,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      
-      String? token;
-      
-      if (data['data'] != null && data['data']['accessToken'] != null) {
-          token = data['data']['accessToken'];
-      } else if (data['accessToken'] != null) {
-          token = data['accessToken'];
-      } else if (data['token'] != null) {
-          token = data['token'];
-      }
-
-      if (token != null) {
-          _accessToken = token;
-          await StorageHelper.saveAccessToken(token);
-      } else {
-          throw Exception("Login berhasil, tapi token tidak ditemukan dalam respons. Lihat konsol untuk melihat struktur respons.");
-      }
-    } else {
-      final errorData = jsonDecode(response.body);
-      final message = errorData['message'] ?? 'Gagal login.';
-      throw Exception('Login Gagal. Status: ${response.statusCode}. Pesan: $message');
-    }
-  }
+  // --- METODE AUTH LAMA DIHAPUS, DIGANTIKAN OLEH FIREBASE AUTH SERVICE ---
 
   Future<List<Map<String, dynamic>>> fetchCourses(String category) async { 
     String endpointPath = '/courses'; 
@@ -209,10 +155,10 @@ class ApiService {
     final headers = await getAuthHeaders();
 
     final payload = jsonEncode({
-        'name': name,
-        'price': formattedPrice,
-        'categoryTag': [category], 
-        'thumbnail': thumbnailUrl,
+      'name': name,
+      'price': formattedPrice,
+      'categoryTag': [category], 
+      'thumbnail': thumbnailUrl,
     });
 
     final response = await http.post(
@@ -250,12 +196,12 @@ class ApiService {
     final headers = await getAuthHeaders();
 
     final payload = jsonEncode({
-        "data": { 
-             'name': name,
-             'price': formattedPrice, 
-             'categoryTag': [category], 
-             'thumbnail': thumbnailUrl,
-        }
+      "data": { 
+        'name': name,
+        'price': formattedPrice, 
+        'categoryTag': [category], 
+        'thumbnail': thumbnailUrl,
+      }
     });
 
     final response = await http.put(
