@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:luarsekolah/domain/entities/todo.dart';
+import 'package:luarsekolah/domain/entities/todo.dart'; // Sesuaikan dengan path entity Todo Anda
 
 class TodoFirestoreService {
   // Inisialisasi Firestore instance
@@ -9,9 +9,21 @@ class TodoFirestoreService {
   CollectionReference get todosCollection => _firestore.collection('todos');
 
   // Fetch semua todo secara sekali jalan (Future)
-  Future<List<Todo>> fetchTodos() async {
+  // Menerima parameter opsional completedStatus (true/false/null) untuk filtering
+  Future<List<Todo>> fetchTodos({bool? completedStatus}) async {
     try {
-      final snapshot = await todosCollection.get();
+      // 1. Definisikan Query Awal
+      Query query = todosCollection;
+
+      // 2. Terapkan Filter jika completedStatus tidak null
+      if (completedStatus != null) {
+        // Gunakan .where() untuk memfilter data di server (Firestore)
+        query = query.where('completed', isEqualTo: completedStatus);
+      }
+
+      // 3. Eksekusi Query (yang sudah difilter atau semua)
+      final snapshot = await query.get();
+      
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return Todo(
@@ -28,8 +40,19 @@ class TodoFirestoreService {
   }
 
   // Stream untuk mendengarkan perubahan realtime
-  Stream<List<Todo>> streamTodos() {
-    return todosCollection.snapshots().map((snapshot) {
+  // Menerima parameter opsional completedStatus untuk filtering secara realtime
+  Stream<List<Todo>> streamTodos({bool? completedStatus}) {
+    // 1. Definisikan Query Awal
+    Query query = todosCollection;
+    
+    // 2. Terapkan Filter jika completedStatus tidak null
+    if (completedStatus != null) {
+      // Gunakan .where() untuk filtering data di stream
+      query = query.where('completed', isEqualTo: completedStatus);
+    }
+
+    // 3. Kembalikan Stream dari Query yang sudah difilter atau semua
+    return query.snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return Todo(
@@ -49,7 +72,7 @@ class TodoFirestoreService {
       final now = DateTime.now();
       final docRef = await todosCollection.add({
         'text': text,
-        'completed': false,
+        'completed': false, // Pastikan field 'completed' selalu ada saat membuat
         'createdAt': now,
         'updatedAt': now,
       });
@@ -69,7 +92,7 @@ class TodoFirestoreService {
   Future<void> toggleTodo(String id, bool completed) async {
     try {
       await todosCollection.doc(id).update({
-        'completed': completed,
+        'completed': completed, // Update field 'completed'
         'updatedAt': DateTime.now(),
       });
     } catch (e) {

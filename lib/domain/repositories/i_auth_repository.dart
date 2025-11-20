@@ -1,4 +1,5 @@
 abstract class IAuthRepository {
+  //ini menjaga biar logika domain tidak terikat hanya pada satu implemen data spesifik
   Future<void> register({
     required String name,
     required String email,

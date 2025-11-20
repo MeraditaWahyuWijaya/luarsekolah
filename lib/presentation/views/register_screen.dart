@@ -9,7 +9,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '/main.dart';
 
 
-// --- Widget Utama ---
+//week09 pertama-tama bikin ui untuk user masukin email sm password
+
+//Widget Utama
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
 
@@ -18,8 +20,8 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
-  // --- Controller untuk Input Formulir ---
-  final _formKey = GlobalKey<FormState>();
+  //  Controller untuk Input Formulir 
+ final _registrationFormKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -29,16 +31,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isLoading = false; // Status untuk menampilkan indikator loading saat registrasi
 
-  // --- Status reCAPTCHA ---
+  // Status reCAPTCHA 
   String? _recaptchaToken;
   bool _isRecaptchaVerified = false;
 
-  // --- State Navigasi ---
+  // State Navigasi 
   // Mengatur tampilan: 0 untuk formulir registrasi, 1 untuk pesan verifikasi sukses
   int _currentPageIndex = 0;
   String _registeredEmail = ''; // Menyimpan email yang baru didaftarkan
 
-  // --- Status Tampilan & Validasi Real-time ---
+  // Status Tampilan & Validasi Real-time 
   bool _isPasswordVisible = false; // Mengontrol visibilitas password
   bool isFormValid = false; // Status keseluruhan formulir (untuk mengaktifkan tombol Daftar)
 
@@ -126,7 +128,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   // --- Fungsi Kompleks: Penanganan Registrasi (API Call) ---
   void _handleRegistration(BuildContext context) async {
     // 1. Validasi Formulir Global dan reCAPTCHA
-    if (_formKey.currentState!.validate() && _isRecaptchaVerified) {
+    if (_registrationFormKey.currentState!.validate() && _isRecaptchaVerified) {
       setState(() {
         _isLoading = true; // Aktifkan indikator loading
       });
@@ -361,7 +363,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
         // Kolom Input: Nama Lengkap
         TextFormField(
-            controller: _nameController,
+            controller: _nameController, //views manggil fungsi controller
           decoration: InputDecoration(
             labelText: 'Nama Lengkap',
             hintText: 'Masukkan nama lengkapmu',
@@ -633,7 +635,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Form(
-            key: _formKey,
+            key: _registrationFormKey,
             // AnimatedSwitcher digunakan untuk transisi halus antara formulir registrasi dan pesan verifikasi sukses
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 400),

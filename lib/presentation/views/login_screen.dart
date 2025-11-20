@@ -17,7 +17,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _loginFormKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   
@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (_formKey.currentState!.validate()) {
+    if (_loginFormKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
@@ -139,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
-          key: _formKey,
+         key: _loginFormKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

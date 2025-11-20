@@ -13,7 +13,7 @@ class ProfileFormScreen extends StatefulWidget {
 }
 
 class _ProfileFormScreenState extends State<ProfileFormScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _profileFormKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
@@ -56,7 +56,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   }
 
   Future<void> _saveProfile() async {
-    if (_formKey.currentState!.validate()) {
+    if (_profileFormKey.currentState!.validate()) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('userName', _nameController.text);
       await prefs.setString('userDOB', _dobController.text);
@@ -104,7 +104,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Form(
-            key: _formKey,
+           key: _profileFormKey,
             onChanged: _checkFormFilled,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -7,11 +7,18 @@ import 'package:luarsekolah/presentation/controllers/class_controllers.dart';
 import 'package:luarsekolah/domain/entities/class_model.dart';
 import 'package:luarsekolah/utils/validators.dart';
 
-class KelasPopulerScreenClean extends StatelessWidget {
-  KelasPopulerScreenClean({super.key});
+// StatefulWidget
+class KelasPopulerScreenClean extends StatefulWidget {
+  const KelasPopulerScreenClean({super.key});
 
+  @override
+  State<KelasPopulerScreenClean> createState() => _KelasPopulerScreenCleanState();
+}
+
+class _KelasPopulerScreenCleanState extends State<KelasPopulerScreenClean> {
   static const Color _kButtonGreen = Color(0xFF00A65A);
-  final _formKey = GlobalKey<FormBuilderState>();
+
+  final _kelasPopulerFormKey = GlobalKey<FormBuilderState>();
 
   String _formatClassPrice(Map<String, dynamic> classData) {
     final priceValue = classData['price']?.toString() ?? '0';
@@ -73,7 +80,6 @@ class KelasPopulerScreenClean extends StatelessWidget {
             ? classToEdit!.thumbnailUrl
             : '';
 
-
         final ClassCategory initialCategory = isEditing
             ? (classToEdit!.category.toLowerCase().contains('spl') == true 
                 ? ClassCategory.spl 
@@ -97,7 +103,7 @@ class KelasPopulerScreenClean extends StatelessWidget {
             borderRadius: BorderRadius.circular(12.0),
           ),
           child: FormBuilder(
-            key: _formKey,
+            key: _kelasPopulerFormKey,
             initialValue: initialValues ?? const {},
             child: SingleChildScrollView( 
               child: Column(
@@ -128,14 +134,14 @@ class KelasPopulerScreenClean extends StatelessWidget {
                     validator: (value) {
                       if (value == null || value.isEmpty) return 'Harga wajib diisi.';
                       if (double.tryParse(
-                                  value.replaceAll('.', '').replaceAll(',', '')) ==
-                              null) {
+                                      value.replaceAll('.', '').replaceAll(',', '')) ==
+                                  null) {
                         return 'Harga harus berupa angka.';
                       }
                       return null;
                     },
                   ),
-                    const SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   FormBuilderDropdown<ClassCategory>(
                     name: 'category',
                     decoration: const InputDecoration(
@@ -154,7 +160,7 @@ class KelasPopulerScreenClean extends StatelessWidget {
                       );
                     }).toList(),
                   ),
-                    const SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   FormBuilderTextField(
                       name: 'thumbnailUrl',
                       decoration: const InputDecoration(
@@ -163,9 +169,9 @@ class KelasPopulerScreenClean extends StatelessWidget {
                         border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.url,
-                      validator: isEditing ? null : Validators.required('URL Thumbnail'), // Hanya wajib saat mode tambah
-                    ),
-                    const SizedBox(height: 24),
+                      validator: isEditing ? null : Validators.required('URL Thumbnail'),
+                  ),
+                  const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: <Widget>[
@@ -182,8 +188,8 @@ class KelasPopulerScreenClean extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                         ),
                         onPressed: () {
-                          if (_formKey.currentState?.saveAndValidate() ?? false) {
-                            final formData = _formKey.currentState!.value;
+                          if (_kelasPopulerFormKey.currentState?.saveAndValidate() ?? false) {
+                            final formData = _kelasPopulerFormKey.currentState!.value;
                             if (isEditing) {
                               controller.submitEditClass(formData);
                             } else {

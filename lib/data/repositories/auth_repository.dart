@@ -1,10 +1,11 @@
 import 'package:luarsekolah/domain/repositories/i_auth_repository.dart';
-import 'package:luarsekolah/data/providers/firebase_auth_service.dart';
 
 class AuthRepository implements IAuthRepository {
-  final FirebaseAuthService _firebaseAuthService;
+  final IAuthRepository _service;
 
-  AuthRepository(this._firebaseAuthService);
+//week09 disini menerima perintah drai usecase dan nerusin ke service 
+//kayak nerjemahin data usecase ke service api
+  AuthRepository(this._service);
 
   @override
   Future<void> register({
@@ -12,21 +13,25 @@ class AuthRepository implements IAuthRepository {
     required String email,
     required String password,
     required String phone,
-  }) async {
-    await _firebaseAuthService.signUp(name, email, password);
-    // Jika mau, simpan phone atau data tambahan ke Firestore di sini
+  }) {
+    return _service.register(
+      name: name,
+      email: email,
+      password: password,
+      phone: phone,
+    );
   }
 
   @override
   Future<void> login({
     required String email,
     required String password,
-  }) async {
-    await _firebaseAuthService.signIn(email, password);
+  }) {
+    return _service.login(email: email, password: password);
   }
 
   @override
-  Future<void> logout() async {
-    await _firebaseAuthService.signOut();
+  Future<void> logout() {
+    return _service.logout();
   }
 }

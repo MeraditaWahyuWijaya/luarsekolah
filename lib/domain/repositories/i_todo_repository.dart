@@ -7,3 +7,4 @@ abstract class ITodoRepository {
   Future<void> toggleTodo(String id, bool completed); // Toggle status todo
   Future<void> deleteTodo(String id);              // Menghapus todo
 }
+//yang menjamin fungsi getTodos(), addTodo(), dan deleteTodo() pasti ad

@@ -72,11 +72,11 @@ class TodoController extends GetxController {
   }
 
   // Tambah todo baru ke Firestore
-  Future<void> addTodo(String text) async {
+  Future<void> addTodo(String text) async { 
     if (text.isEmpty) return;
     isLoading(true);
     try {
-      await _firestoreService.createTodo(text); // hanya text, tanpa deskripsi
+      await _firestoreService.createTodo(text); //MANGGIL USECASE BUAT AKSI CRUD
       Get.snackbar(
         'Sukses',
         'Todo berhasil ditambahkan!',

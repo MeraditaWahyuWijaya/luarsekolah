@@ -3,6 +3,10 @@ import 'package:luarsekolah/domain/usecases/register_usecase.dart';
 import 'package:luarsekolah/domain/usecases/login_usecase.dart';
 import 'package:luarsekolah/domain/usecases/logout_usecase.dart';
 
+
+
+//wweek09 nah disini tempat nerima data dari ui yg tadi login/register/logout
+//disini tidak langsung ke repo tapi manggil usecase buat logika bisnis
 class AuthController extends GetxController {
   final RegisterUseCase registerUseCase;
   final LoginUseCase loginUseCase;
@@ -16,7 +20,7 @@ class AuthController extends GetxController {
 
   var isLoading = false.obs;
 
-  Future<void> register({
+  Future<void> register({ 
     required String name,
     required String email,
     required String password,
@@ -24,7 +28,7 @@ class AuthController extends GetxController {
   }) async {
     try {
       isLoading.value = true;
-      await registerUseCase.execute(
+      await registerUseCase.execute( //disini pemanggilannya
         name: name,
         email: email,
         password: password,
@@ -41,7 +45,10 @@ class AuthController extends GetxController {
   }) async {
     try {
       isLoading.value = true;
-      await loginUseCase.execute(email: email, password: password);
+      await loginUseCase.execute(
+        email: email,
+        password: password,
+      );
     } finally {
       isLoading.value = false;
     }

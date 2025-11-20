@@ -1,71 +1,73 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:luarsekolah/data/providers/storage_helper.dart';
+import 'package:luarsekolah/domain/repositories/i_auth_repository.dart';
 
-// Layanan ini mengelola semua proses otentikasi menggunakan Firebase Authentication.
-class FirebaseAuthService {
+class FirebaseAuthService implements IAuthRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Stream untuk memantau perubahan status otentikasi (digunakan di main.dart)
+
+//week09 ini file yang berinteraksi, mengirimkan permintaan api  langsung sama firebase auth
   Stream<User?> get user => _auth.authStateChanges();
 
-  // --- REGISTRASI PENGGUNA BARU ---
-  Future<UserCredential> signUp(String email, String password, String name) async {
+  @override
+  Future<void> register({
+    required String name,
+    required String email,
+    required String password,
+    required String phone,
+  }) async {
     try {
       final cleanedEmail = email.trim();
-      // 1. Membuat pengguna di Firebase Auth
-      final userCredential = await _auth.createUserWithEmailAndPassword(
+
+      final credential = await _auth.createUserWithEmailAndPassword( //ngirim data ke FB
         email: cleanedEmail,
         password: password,
       );
+      //jika berhasil, firebase nanti membuat user dan ngembaliin berupa usercredential dibawah ini
+      await credential.user?.updateDisplayName(name);
+      // Phone bisa disimpan ke Firestore jika perlu
 
-      // 2. Memperbarui Display Name (Nama Pengguna)
-      await userCredential.user?.updateDisplayName(name);
-      
-      // Catatan: Nomor telepon (phone) akan disimpan di Firestore jika diperlukan 
-      // setelah proses ini selesai (di layer Business Logic/Bloc).
-
-      return userCredential;
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e) { //melempar error kalo firebase gagal 
+      if (e.code == 'email-already-in-use') {
+        throw Exception('Email sudah digunakan.');
+      }
       if (e.code == 'weak-password') {
-        throw Exception('Password terlalu lemah. Coba yang lebih kuat.');
-      } else if (e.code == 'email-already-in-use') {
-        throw Exception('Akun dengan email ini sudah terdaftar.');
+        throw Exception('Password terlalu lemah.');
       }
-      // Error lain dari Firebase
-      throw Exception('Pendaftaran Gagal: ${e.message}');
-    } catch (e) {
-      throw Exception('Terjadi error tak terduga saat mendaftar: $e');
+      if (e.code == 'invalid-email') {
+        throw Exception('Format email tidak valid.');
+      }
+      throw Exception(e.message ?? 'Terjadi kesalahan saat register.');
     }
   }
 
-  // --- LOGIN PENGGUNA ---
-  Future<UserCredential> signIn(String email, String password) async {
+  @override
+  Future<void> login({
+    required String email,
+    required String password,
+  }) async {
     try {
-      final cleanedEmail = email.trim();
-      final userCredential = await _auth.signInWithEmailAndPassword(
-        email: cleanedEmail,
+      await _auth.signInWithEmailAndPassword(
+        email: email.trim(),
         password: password,
       );
-      
-      // Jika kamu masih perlu token dari API lama untuk fetchCourses, 
-      // logic untuk mendapatkan token itu harus diletakkan di sini 
-      // setelah login Firebase berhasil (sangat tergantung backend lama kamu).
-
-      return userCredential;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found' || e.code == 'wrong-password') {
-        throw Exception('Email atau password salah. Cek kembali kredensial Anda.');
+      if (e.code == 'invalid-email') {
+        throw Exception('Format email tidak valid.');
       }
-      throw Exception('Login Gagal: ${e.message}');
-    } catch (e) {
-      throw Exception('Terjadi error tak terduga saat login: $e');
+      if (e.code == 'user-not-found') {
+        throw Exception('Pengguna tidak ditemukan.');
+      }
+      if (e.code == 'wrong-password') {
+        throw Exception('Password salah.');
+      }
+      throw Exception(e.message ?? 'Terjadi kesalahan saat login.');
     }
   }
 
-  // --- SIGN OUT ---
-  Future<void> signOut() async {
+  @override
+  Future<void> logout() async {
     await _auth.signOut();
-    // Hapus token API lama dari local storage jika ada (ini diperlukan agar fetchCourses gagal jika user logout)
-    await StorageHelper.deleteAccessToken(); 
+    await StorageHelper.deleteAccessToken();
   }
 }
