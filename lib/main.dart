@@ -5,15 +5,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
-
-// Import File Setup & Binding
+import 'package:luarsekolah/data/providers/notification_service.dart';
 import 'firebase_options.dart';
 import 'package:luarsekolah/presentation/bindings/notification_binding.dart'; 
 import 'package:luarsekolah/presentation/bindings/auth_binding.dart'; 
 import 'package:luarsekolah/presentation/bindings/todo_binding.dart';
 import 'package:luarsekolah/presentation/bindings/class_binding.dart'; 
-
-// Import Views (Sesuaikan dengan nama view Anda yang sebenarnya)
 import 'package:luarsekolah/presentation/views/coin_ls_screen.dart';
 import 'package:luarsekolah/presentation/views/class_screen.dart';
 import 'package:luarsekolah/presentation/views/login_screen.dart'; 
@@ -38,20 +35,28 @@ class AppRoutes {
   static const String todoDetail = '/todo_detail'; // Rute Deep Link
 }
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Setup Timezone Wajib untuk Local Notification Scheduling
-  tz.initializeTimeZones();
-  // Atur zona waktu lokal (Asia/Jakarta)
-  tz.setLocalLocation(tz.getLocation('Asia/Jakarta')); 
-
   // Inisialisasi Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform); 
-  
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Setup Timezone untuk Local Notifications
+  tz.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
+
   // Daftarkan Background Handler FCM
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  
+
+  // Inisialisasi NotificationService di awal app
+  final notificationService = NotificationService();
+  await notificationService.initialize();   // token akan diambil di sini
+  notificationService.startFCMListener();
+
+  // Print token agar mudah dicari
+  final token = await notificationService.getFCMToken();
+  print("[FCM] Tokennya disiniiii: $token");
+
   runApp(const MyApp());
 }
 
@@ -73,7 +78,7 @@ class MyApp extends StatelessWidget {
       getPages: [
         GetPage(
           name: AppRoutes.register,
-          page: () => const RegistrationScreen(), // Ganti dengan nama view Anda
+          page: () => const RegistrationScreen(), 
           binding: AuthBinding(),
         ),
         GetPage(
@@ -106,3 +111,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+//main.dart → NotificationService (inisialisasi & token) → MainController (gabung FCM + local notif) → Bindings (daftarkan service & controller) → UI (interaksi user)
