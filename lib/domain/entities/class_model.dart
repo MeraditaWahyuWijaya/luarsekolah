@@ -1,66 +1,34 @@
 class ClassModel {
   final String id;
-  String title;
-  String description;
-  String price;
-  String category;
-  String thumbnailUrl;
-  bool isCompleted;
+  final String title;
+  final int price;
+  final String category; // Populer / SPL
+  final String thumbnailUrl;
 
   ClassModel({
     required this.id,
     required this.title,
-    this.description = '', 
     required this.price,
     required this.category,
     required this.thumbnailUrl,
-    this.isCompleted = false, 
   });
 
-  factory ClassModel.fromJson(Map<String, dynamic> json) {
-    final name = json['name'] ?? json['title'] ?? 'N/A';
-    final price = json['price']?.toString() ?? '0';
-    final category = json['category']?.toString() ?? 'General';
-
+  factory ClassModel.fromMap(Map<String, dynamic> map, String id) {
     return ClassModel(
-      id: json['id']?.toString() ?? '',
-      title: name,
-      description: json['description'] ?? '', 
-      price: price,
-      category: category,
-      thumbnailUrl: json['thumbnailUrl'] ?? json['thumbnail'] ?? '',
-      isCompleted: json['isCompleted'] ?? false,
+      id: id,
+      title: map['title'] ?? '',
+      price: map['price'] ?? 0,
+      category: map['category'] ?? 'Populer',
+      thumbnailUrl: map['thumbnailUrl'] ?? '',
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
-      'id': id,
-      'name': title,
+      'title': title,
       'price': price,
-      'category': category.toLowerCase().contains('spl') ? 'SPL' : 'Populer',
+      'category': category,
       'thumbnailUrl': thumbnailUrl,
-      'isCompleted': isCompleted,
     };
-  }
-
-  ClassModel copyWith({
-    String? id,
-    String? title,
-    String? description,
-    String? price,
-    String? category,
-    String? thumbnailUrl,
-    bool? isCompleted,
-  }) {
-    return ClassModel(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      price: price ?? this.price,
-      category: category ?? this.category,
-      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
-      isCompleted: isCompleted ?? this.isCompleted,
-    );
   }
 }

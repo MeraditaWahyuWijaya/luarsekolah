@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
-import 'package:luarsekolah/data/providers/notification_service.dart'; // Service FCM
-import 'package:luarsekolah/data/providers/local_notification_service.dart'; // Service Local Notif
+import 'package:luarsekolah/data/providers/notification_service.dart';
+import 'package:luarsekolah/data/providers/local_notification_service.dart';
 
 class MainController extends GetxController {
-  final NotificationService _notifService = Get.find<NotificationService>(); 
+  final NotificationService _notifService = Get.find<NotificationService>();
   RxString fcmToken = 'Memuat Token...'.obs;
 
   @override
@@ -12,43 +12,37 @@ class MainController extends GetxController {
     _setupNotifications();
   }
 
+  /// Inisialisasi Local Notification + FCM + start listener
   void _setupNotifications() async {
-    // 1. Inisialisasi Service Local Notif (wajib sebelum FCM listener)
-    await LocalNotificationService.initialize();
-    
-    // 2. Inisialisasi dan Start Listener FCM
+    await LocalNotificationService.initialize(); // wajib sebelum FCM listener
     await _notifService.initialize();
     _notifService.startFCMListener();
-    
-    _fetchAndSendToken();
-  }
-  
-  // Contoh fungsi untuk menjadwalkan notif offline (misal 1 jam dari sekarang)
-  void scheduleTestReminder() {
-      DateTime scheduledTime = DateTime.now().add(Duration(hours: 1));
-      LocalNotificationService.schedule(
-          title: 'Pengingat Otomatis',
-          body: 'Ini adalah pengingat yang dijadwalkan secara offline.',
-          scheduledTime: scheduledTime,
-          payload: 'todo_offline_123',
-      );
+    _fetchToken();
   }
 
-
-  void _fetchAndSendToken() async {
+  /// Ambil FCM token dan update observable
+  void _fetchToken() async {
     final token = await _notifService.getFCMToken();
     if (token != null) {
-      fcmToken.value = 'Token Sukses: ${token.substring(0, 15)}...'; 
+      fcmToken.value = 'Token: ${token.substring(0, 15)}...';
+      print(fcmToken.value); // tampilkan token di console
     }
   }
 
-  // 🚨 FUNGSI INTI: PUSAT NAVIGASI DEEP LINK
+  /// Navigasi ketika user klik notifikasi
   void handleNotificationClick(String todoId) {
     print('Navigasi dipicu untuk To-Do ID: $todoId');
-    
-    Get.toNamed(
-      '/todo_detail', 
-      parameters: {'id': todoId}
+    Get.toNamed('/todo_detail', parameters: {'id': todoId});
+  }
+
+  /// Contoh jadwal notifikasi offline 1 jam dari sekarang
+  void scheduleTestReminder() {
+    DateTime scheduledTime = DateTime.now().add(const Duration(hours: 1));
+    LocalNotificationService.schedule(
+      title: 'Pengingat Otomatis',
+      body: 'Ini adalah pengingat yang dijadwalkan.',
+      scheduledTime: scheduledTime,
+      payload: 'todo_offline_123',
     );
   }
 }
