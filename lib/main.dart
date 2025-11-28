@@ -104,7 +104,7 @@ class MyApp extends StatelessWidget {
         // Rute Lainnya
         GetPage(
         name: AppRoutes.classDashboard, 
-        page: () => KelasPopulerScreenClean(), // Ganti dengan nama view Anda
+        page: () => ClassScreen(), // Ganti dengan nama view Anda
         binding: ClassBinding(),
       ),
       ],

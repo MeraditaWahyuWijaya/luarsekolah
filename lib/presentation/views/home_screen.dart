@@ -105,35 +105,41 @@ class _HomeScreenState extends State<HomeScreen> {
               fit: BoxFit.contain,
             ),
           ),
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Redeem Voucher Prakerjamu', 
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Align(
-                  alignment: Alignment.center,
-                  child: SizedBox(
-                    width: 250,
-                    child: const Text(
-                      'Kamu pengguna Prakerja? Segera redeem vouchermu sekarang juga',
-                      textAlign: TextAlign.left,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                ),
+         Padding(
+  // Memberi Padding hanya di sebelah KIRI, 
+  // yang secara efektif memaksa Center untuk bergeser ke KANAN
+  padding: const EdgeInsets.only(left: 40.0), // Sesuaikan nilai 40.0
+  child: Center(
+  child: Column(
+    // ✨ Tambahkan properti ini untuk menengahkan anak-anak secara horizontal
+    crossAxisAlignment: CrossAxisAlignment.center, 
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      const Text(
+        'Redeem Voucher Prakerjamu',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
+      ),
+      const SizedBox(height: 6),
+      // Tidak perlu lagi menggunakan Align di sini, 
+      // cukup CrossAxisAlignment.center di Column sudah menengahkan SizedBox
+      SizedBox( 
+        width: 250,
+        child: const Text(
+          'Kamu pengguna Prakerja? Segera redeem vouchermu sekarang juga',
+          // Ubah textAlign menjadi TextAlign.center agar teks di tengah di dalam SizedBox
+          textAlign: TextAlign.center, 
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+      ),
                 const SizedBox(height: 15),
                 OutlinedButton(
                   onPressed: () {
@@ -155,6 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+         ),
         ],
       ),
     );
