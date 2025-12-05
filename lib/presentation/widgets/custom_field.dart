@@ -81,7 +81,7 @@ class _MainScreenWithNavBarState extends State<MainScreenWithNavBar> {
 
   final List<Widget> _widgetOptions = <Widget>[
     HomeScreen(),
-    KelasPopulerScreenClean(),
+   ClassScreen(),
     MyClassScreen(),
    TodoDashboardPage(),
     ProfileFormScreen(),

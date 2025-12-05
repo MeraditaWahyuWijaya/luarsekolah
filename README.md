@@ -1,15 +1,107 @@
-Dokumentasi Refactoring Arsitektur Flutter
-Tujuan : 
-Proyek ini telah direstrukturisasi menggunakan pola Clean Architecture (Domain, Data, Presentation) dan GetX untuk manajemen state. Tujuan utama adalah mencapai pemisahan tanggung jawab (Separation of Concerns), yang meningkatkan kualitas kode dan kemampuan testing.
+# Luarsekolah
 
-Struktur Arsitektur (3-Layer)
-Domain,lib/domain/,"Kontrak Bisnis: Entities, Abstract Repositories (I_...Repository), dan Use Cases (Logika Bisnis)."
-Data,lib/data/,Implementasi: Providers (API) dan Concrete Repositories (...Repository) yang mengimplementasikan kontrak Domain.
-Presentation,lib/presentation/,"UI & Kontrol: Views, Controllers (yang berkomunikasi HANYA dengan Use Case), dan Bindings."
+Aplikasi e-learning seluler untuk menambah kelas, mengelola jadwal, dan menerima notifikasi pembelajaran.
 
-Implementasi Kunci (Dependency Injection)Kami menggunakan GetX Bindings (TodoBinding, ClassBinding) untuk mengatur urutan injeksi, memastikan Controller selalu bergantung pada abstraksi (Use Case atau Abstract Repository), bukan implementasi langsung.Controller - Use Case- Abstract Repository - Concrete Repository - Provider.
+---
 
-Modul	       Status Implementasi Clean Architecture
-Kelas (Class)	Selesai
-Todo (Todo)  	
+## Deskripsi Proyek
+Luarsekolah adalah aplikasi mobile yang dirancang untuk mempermudah pengalaman e-learning pengguna.  
+Fitur utama yang tersedia:
 
+- Registrasi dan login pengguna
+- Menambahkan dan mengelola berbagai kelas
+- Membuat dan menyimpan catatan materi pembelajaran
+- Menerima notifikasi penting terkait jadwal kelas atau materi baru
+
+---
+
+## Teknologi & Dependencies
+
+Proyek ini dikembangkan menggunakan **Flutter** dan **Dart**.
+
+### Dependencies Inti
+- Flutter SDK
+- Dart
+
+### Framework & UI
+- `get`: Manajemen state dan navigasi  
+- `google_fonts`: Font kustom  
+- `carousel_slider`: Menampilkan konten dalam slide  
+- `cupertino_icons`: Ikon gaya iOS  
+- `nested_scroll_view_plus`: Pengguliran fleksibel  
+
+### Form & Validasi
+- `flutter_form_builder`  
+- `form_builder_image_picker`  
+- `form_builder_validators`  
+
+### Konektivitas Data
+- `http` & `dio`  
+
+### Firebase & Notifikasi
+- `firebase_core`, `firebase_auth`, `cloud_firestore`, `firebase_storage`  
+- `firebase_messaging`, `flutter_local_notifications`  
+- `permission_handler`  
+- `timezone`  
+- `shared_preferences`  
+
+### Gambar
+- `image_picker`
+
+---
+
+## Fitur Utama
+- **Autentikasi Pengguna**: Login dan Logout dengan Firebase Authentication  
+- **Manajemen Kelas**: Tambah dan kelola daftar kelas e-learning  
+- **Catatan**: Simpan catatan materi pembelajaran  
+- **Notifikasi**: Pemberitahuan real-time melalui Firebase Messaging  
+
+---
+
+## Getting Started
+
+### Prasyarat
+- Flutter SDK
+- Android Studio atau VS Code
+- Firebase project (untuk integrasi fitur tertentu)
+
+### Instalasi, Konfigurasi, Build & Penggunaan
+Semua langkah berikut sudah digabung dalam satu code block:
+
+```bash
+# Install dependencies
+flutter pub get
+
+#Konfigurasi Firebase
+# Android: pastikan google-services.json sudah di tempat yang tepat
+# iOS: pastikan GoogleService-Info.plist sudah di tempat yang tepat
+# Aktifkan Authentication & Cloud Firestore
+
+# Build & Run Project
+# Get dependencies (jika belum)
+flutter pub get
+
+# Jalankan aplikasi di emulator atau perangkat fisik
+flutter run
+
+# Build untuk Android
+flutter build apk
+
+# Build untuk iOS
+flutter build ios
+
+# Cara Penggunaan
+# Registrasi/Login
+# Buat akun baru atau login
+
+# -Akses Kelas
+# -Lihat daftar kelas di halaman utama
+
+# -Tambah Kelas
+# -Tambahkan kelas baru ke daftar
+
+# -Buat Catatan
+# -Rekam poin penting materi pembelajaran
+
+# -Dapatkan Notifikasi
+# -Izinkan notifikasi untuk reminder kelas & info penting

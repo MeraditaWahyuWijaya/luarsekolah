@@ -2,12 +2,16 @@ import 'package:get/get.dart';
 import 'package:luarsekolah/domain/entities/todo.dart';
 import 'package:luarsekolah/data/providers/todo_firestore_service.dart';
 import 'package:flutter/material.dart';
+import 'package:luarsekolah/data/providers/local_notification_service.dart';
 
 // Enum untuk filter todo di UI
 enum TodoFilter { all, completed, pending }
 
 class TodoController extends GetxController {
   final TodoFirestoreService _firestoreService;
+
+  // Mode test untuk unit test, agar tidak memanggil Firestore dan notifikasi
+  final bool isTest;
 
   // List todo observable agar UI otomatis refresh saat berubah
   var todos = <Todo>[].obs;
@@ -23,17 +27,21 @@ class TodoController extends GetxController {
   Stream<List<Todo>>? _todoStream;
   late Rx<Stream<List<Todo>>> _streamObs;
 
-  TodoController(this._firestoreService);
+  // Constructor menerima service dan flag isTest default false
+  TodoController(this._firestoreService, {this.isTest = false});
 
   @override
   void onInit() {
     super.onInit();
-    // Mulai stream realtime dari Firestore
-    _todoStream = _firestoreService.streamTodos();
-    _streamObs = _todoStream!.obs;
-    // Listen stream setiap update
-    ever(_streamObs, (_) => _listenTodos());
-    _listenTodos();
+
+    // Hanya jalankan stream Firestore jika bukan mode test
+    if (!isTest) {
+      _todoStream = _firestoreService.streamTodos();
+      _streamObs = _todoStream!.obs;
+      // Listen stream setiap update
+      ever(_streamObs, (_) => _listenTodos());
+      _listenTodos();
+    }
   }
 
   // Mendengarkan perubahan todo dari Firestore
@@ -71,27 +79,45 @@ class TodoController extends GetxController {
     filter.value = newFilter;
   }
 
-  // Tambah todo baru ke Firestore
-  Future<void> addTodo(String text) async { 
+  // Tambah todo baru
+  Future<void> addTodo(String text) async {
     if (text.isEmpty) return;
     isLoading(true);
+
     try {
-      await _firestoreService.createTodo(text); //MANGGIL USECASE BUAT AKSI CRUD
-      Get.snackbar(
-        'Sukses',
-        'Todo berhasil ditambahkan!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.shade400,
-        colorText: Colors.white,
-      );
+      // Tambah todo ke service dan dapatkan ID baru
+      final newTodo = await _firestoreService.createTodo(text);
+
+      // Jika bukan mode test, tampilkan notifikasi lokal
+      if (!isTest) {
+        LocalNotificationService.show(
+          title: 'Catatan Baru',
+          body: 'Catatan baru telah berhasil ditambahkan!',
+          payload: newTodo.id,
+        );
+
+        // Snackbar sebagai feedback UI
+        Get.snackbar(
+          'Sukses',
+          'Todo berhasil ditambahkan!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.shade400,
+          colorText: Colors.white,
+        );
+      }
+
+      // Update UI langsung
+      todos.add(newTodo);
     } catch (e) {
-      Get.snackbar(
-        'Gagal menambah Todo',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade400,
-        colorText: Colors.white,
-      );
+      if (!isTest) {
+        Get.snackbar(
+          'Gagal menambah Todo',
+          e.toString(),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade400,
+          colorText: Colors.white,
+        );
+      }
     } finally {
       isLoading(false);
     }
@@ -103,22 +129,28 @@ class TodoController extends GetxController {
     if (todoIndex == -1) return;
 
     final oldTodo = todos[todoIndex];
-    todos[todoIndex] = oldTodo.copyWith(completed: !oldTodo.completed);
+    final newStatus = !oldTodo.completed;
+
+    // Update UI langsung
+    todos[todoIndex] = oldTodo.copyWith(completed: newStatus);
     todos.refresh();
 
-    try {
-      await _firestoreService.toggleTodo(id, oldTodo.completed);
-    } catch (e) {
-      // rollback jika toggle gagal
-      todos[todoIndex] = oldTodo;
-      todos.refresh();
-      Get.snackbar(
-        'Error Toggle',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade400,
-        colorText: Colors.white,
-      );
+    if (!isTest) {
+      try {
+        // Kirim ke Firestore dengan status baru
+        await _firestoreService.toggleTodo(id, newStatus);
+      } catch (e) {
+        // rollback jika toggle gagal
+        todos[todoIndex] = oldTodo;
+        todos.refresh();
+        Get.snackbar(
+          'Error Toggle',
+          e.toString(),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade400,
+          colorText: Colors.white,
+        );
+      }
     }
   }
 
@@ -130,40 +162,41 @@ class TodoController extends GetxController {
     final deletedTodo = todos.removeAt(todoIndex);
     todos.refresh();
 
-    try {
-      await _firestoreService.deleteTodo(id);
-      Get.snackbar(
-        'Dihapus',
-        'Todo berhasil dihapus',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orange.shade400,
-        colorText: Colors.white,
-      );
-    } catch (e) {
-      // rollback jika delete gagal
-      todos.insert(todoIndex, deletedTodo);
-      todos.refresh();
-      Get.snackbar(
-        'Error Hapus',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade400,
-        colorText: Colors.white,
-      );
+    if (!isTest) {
+      try {
+        await _firestoreService.deleteTodo(id);
+        Get.snackbar(
+          'Dihapus',
+          'Todo berhasil dihapus',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orange.shade400,
+          colorText: Colors.white,
+        );
+      } catch (e) {
+        // rollback jika delete gagal
+        todos.insert(todoIndex, deletedTodo);
+        todos.refresh();
+        Get.snackbar(
+          'Error Hapus',
+          e.toString(),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade400,
+          colorText: Colors.white,
+        );
+      }
     }
   }
 
-  //Refresh manual (opsional, untuk tombol refresh)
+  // Refresh manual (opsional, untuk tombol refresh)
   Future<void> refreshTodos() async {
     isLoading(true);
     try {
-    final list = await _firestoreService.fetchTodos();
-    todos.assignAll(list);
+      final list = await _firestoreService.fetchTodos();
+      todos.assignAll(list);
     } catch (e) {
-  errorMessage('Gagal refresh: $e');
+      errorMessage('Gagal refresh: $e');
     } finally {
       isLoading(false);
     }
   }
-
 }

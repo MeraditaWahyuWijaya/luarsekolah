@@ -1,13 +1,10 @@
-import 'package:luarsekolah/domain/entities/class_model.dart';
 import 'dart:io';
+import '../entities/class_model.dart';
 
 abstract class IClassRepository {
-  
-  Future<List<ClassModel>> getClasses(String category);
-  Future<void> deleteClass(String classId);
-  Future<void> updateClassStatus(String classId, bool isCompleted);
-  Future<void> editClass(String classId, Map<String, dynamic> data);
-  
+  Future<List<ClassModel>> getFilteredClasses(String category);
   Future<void> addClassWithImage(Map<String, dynamic> data, File imageFile);
   Future<void> addClassWithoutImage(Map<String, dynamic> data);
+  Future<void> editClass(String id, Map<String, dynamic> data);
+  Future<void> deleteClass(String id);
 }

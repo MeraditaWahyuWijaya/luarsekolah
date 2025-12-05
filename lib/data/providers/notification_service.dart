@@ -1,49 +1,63 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:luarsekolah/presentation/controllers/main_controller.dart';
-import 'package:luarsekolah/data/providers/local_notification_service.dart'; // Akses Local Notif Service
+import 'package:luarsekolah/data/providers/local_notification_service.dart';
 
 class NotificationService {
-  final _fcm = FirebaseMessaging.instance;
-  final _localNotif = FlutterLocalNotificationsPlugin();
+  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  final FlutterLocalNotificationsPlugin _localNotif = FlutterLocalNotificationsPlugin();
 
   Future<void> initialize() async {
-    await _fcm.requestPermission();
-    
-    // Inisialisasi basic Local Notif (hanya untuk setting awal)
-    const initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    NotificationSettings settings = await _fcm.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      print('Notification permission granted');
+    } else {
+      print('Notification permission denied');
+    }
+
+    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     await _localNotif.initialize(
-        const InitializationSettings(android: initializationSettingsAndroid));
-    
-    // Handler notif saat app dibuka dari Terminated state
-    await _handleInitialMessage(); 
+      const InitializationSettings(android: androidSettings),
+    );
+
+    String? token = await getFCMToken();
+    print('FCM Token: $token');
+
+    await _handleInitialMessage();
   }
 
   void startFCMListener() {
-    // 1. HANDLER FOREGROUND (FCM memicu Local Notif)
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final notification = message.notification;
-      final data = message.data; 
+      final data = message.data;
 
       if (notification != null) {
-        // Panggil LocalNotificationService (static) untuk tampilan visual
         LocalNotificationService.show(
-          title: notification.title ?? 'Pembaruan To-Do',
+          title: notification.title ?? 'Pembaruan',
           body: notification.body ?? 'Ada perubahan data.',
-          payload: data['todoId'], // ID To-Do untuk navigasi
+          payload: data['todoId'],
         );
       }
     });
 
-    // 2. HANDLER BACKGROUND (FCM Deep Link)
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      final todoId = message.data['todoId']; 
+      final todoId = message.data['todoId'];
       if (todoId != null) {
-        // Panggil Controller untuk navigasi
         Get.find<MainController>().handleNotificationClick(todoId);
       }
     });
+  }
+
+  Future<String?> getFCMToken() async {
+    return await _fcm.getToken();
   }
 
   Future<void> _handleInitialMessage() async {
@@ -51,7 +65,6 @@ class NotificationService {
     if (message != null) {
       final todoId = message.data['todoId'];
       if (todoId != null) {
-        // Beri jeda agar GetX siap sebelum navigasi
         Future.delayed(const Duration(milliseconds: 500), () {
           Get.find<MainController>().handleNotificationClick(todoId);
         });
@@ -59,7 +72,32 @@ class NotificationService {
     }
   }
 
-  Future<String?> getFCMToken() async {
-    return await _fcm.getToken();
+  Future<void> sendTopicNotification({
+    required String topic,
+    required String title,
+    required String body,
+    Map<String, String>? data,
+  }) async {
+    const serverKey = "<SERVER_KEY_FIREBASE>"; 
+    final url = Uri.parse("https://fcm.googleapis.com/fcm/send");
+
+    final payload = {
+      "to": "/topics/$topic",
+      "notification": {"title": title, "body": body},
+      "data": data ?? {},
+    };
+
+    final response = await HttpClient().postUrl(url).then((req) {
+      req.headers.set('Content-Type', 'application/json');
+      req.headers.set('Authorization', 'key=$serverKey');
+      req.add(utf8.encode(json.encode(payload)));
+      return req.close();
+    });
+
+    if (response.statusCode == 200) {
+      print("Notifikasi topic $topic berhasil dikirim");
+    } else {
+      print("Gagal mengirim notifikasi: ${response.statusCode}");
+    }
   }
 }

@@ -1,10 +1,10 @@
 class Validators {
   static String? Function(String?) required(String fieldName) => (value) {
-        if (value == null || value.trim().isEmpty) {
-          return '$fieldName is required.';
-        }
-        return null;
-      };
+    if (value == null || value.trim().isEmpty) {
+      return '$fieldName is required.';
+    }
+    return null;
+  };
 
   static String? email(String? value) {
     if (value == null || value.isEmpty) {
@@ -39,9 +39,9 @@ class Validators {
     }
     return null;
   }
-  static String? requiredEnum(dynamic value, String fieldName) {
-  if (value == null) return '$fieldName is required.';
-  return null;
-}
 
+  static String? requiredEnum(dynamic value, String fieldName) {
+    if (value == null) return '$fieldName is required.';
+    return null;
+  }
 }
