@@ -661,8 +661,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "9.1.0"
-<<<<<<< HEAD
-=======
   package_config:
     dependency: transitive
     description:
@@ -671,7 +669,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
->>>>>>> feat/week-011-unit-testing
   path:
     dependency: transitive
     description:
