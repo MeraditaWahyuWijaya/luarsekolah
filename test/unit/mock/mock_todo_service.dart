@@ -1,23 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:luarsekolah/domain/entities/todo.dart';
-import 'package:luarsekolah/data/providers/todo_firestore_service.dart';
+import 'package:luarsekolah/domain/entities/todo.dart'; //model
+import 'package:luarsekolah/data/providers/todo_firestore_service.dart';// kita import dulu api yg beneran 
 
 // Mock service menggantikan TodoFirestoreService asli
 // Tidak memanggil Firestore, hanya menyimpan data di memory
 class MockTodoService implements TodoFirestoreService {
-  final List<Todo> _store = [];
-
+  final List<Todo> _store = []; //variabel ini buat database kita, kalo di firebase itu semacam collection
+  
   @override
   CollectionReference get todosCollection => throw UnimplementedError();
 
   @override
-  Future<List<Todo>> fetchTodos({bool? completedStatus}) async {
+  Future<List<Todo>> fetchTodos({bool? completedStatus}) async { //buat ambil dan filter data 
     if (completedStatus == null) return _store;
     return _store.where((t) => t.completed == completedStatus).toList();
   }
 
   @override
-  Future<Todo> createTodo(String text) async {
+  Future<Todo> createTodo(String text) async { //nambahin item ke database
     final now = DateTime.now();
     final todo = Todo(
       id: now.millisecondsSinceEpoch.toString(),

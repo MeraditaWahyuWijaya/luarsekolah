@@ -40,6 +40,8 @@ void main() async {
 
   // Inisialisasi Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await FirebaseMessaging.instance.subscribeToTopic("kelas");
+
 
   // Setup Timezone untuk Local Notifications
   tz.initializeTimeZones();

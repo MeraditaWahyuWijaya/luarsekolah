@@ -6,14 +6,14 @@ import 'mock/mock_todo_service.dart';
 void main() {
   late TodoController controller;
   late MockTodoService mockService;
-
-  setUp(() {
+  
+  setUp(() { //Arrange (ngatur kondisi awal sebelum act dilakukan)
     // Gunakan mock service dan aktifkan mode test supaya tidak memanggil Firestore atau notifikasi
     mockService = MockTodoService();
     controller = TodoController(mockService, isTest: true);
   });
 
-  test('Menambahkan todo harus menambah jumlah daftar', () async {
+  test('Menambahkan todo harus menambah jumlah daftar', () async { //ACT (disini nunjukin aksi yg bakal diuji apa aja)
     // Pastikan list kosong awalnya
     expect(controller.todos.length, 0);
 
@@ -56,6 +56,7 @@ void main() {
     // Tandai satu todo selesai
     await controller.toggleTodo(todo1.id);
 
+//ASSERT (membandingkan hasil, jika hasilnya cocok testnya berhasil)
     expect(controller.completedCount, 1);
     expect(controller.completionRate, 0.5);
   });

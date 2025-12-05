@@ -518,7 +518,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               rating: 4.5,
                               price: 'Rp 1.500.000',
                               imageUrl: 'assets/poster1.png',
-                              tags: const ['Prakerja', 'SPL'],
+                              tags: const ['Prakerja'], //prakerja hijau 
                           ),
                           CourseCardWithHover(
                               title: 'Meningkatkan Pertumbuhan Tanaman',
@@ -553,7 +553,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             width: 200,
                             child: _buildSubscriptionCardContent(
                               title: 'Belajar SwiftUI Untuk Pembuatan Interface',
-                              imageUrl: 'assets/poster2.png',
+                              imageUrl: 'assets/ui.jpg',
                               count: 5,
                             ),
                           ),
@@ -561,7 +561,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             width: 200,
                             child: _buildSubscriptionCardContent(
                               title: 'Belajar Dart Untuk Pembuatan Aplikasi',
-                              imageUrl: 'assets/poster2.png',
+                              imageUrl: 'assets/dart.jpg',
                               count: 5,
                             ),
                           ),
@@ -619,16 +619,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           HoverEffectWrapper(
                             width: 200,
                             child: _buildArticleCardContent(
-                                'Penpot’s Flex Layout: Building CSS Layouts I...',
-                                'In today’s article, let’s explore how we can use FL...',
-                                'assets/thumbnail.png'),
+                                'Transformasi Digital Pendidikan: Tantangan dan...',
+                                'Artikel ini membahas secara mendalam bagaiman...',
+                                'assets/artikel1.png'),
                           ),
                           HoverEffectWrapper(
                             width: 200,
                             child: _buildArticleCardContent(
-                                'Penpot’s Flex Layout: Building CSS Layouts II...',
-                                'In today’s article, let’s explore how we can use FL...',
-                                'assets/thumbnail.png'),
+                                'Menerapkan Pembelajaran Berbasis Proyek (PBL)...',
+                                'Pembelajaran Berbasis Proyek (Project-Based Learn...',
+                                'assets/artikel2.jpg'),
                           ),
                         ],
                       ),

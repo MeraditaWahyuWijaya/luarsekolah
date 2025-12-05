@@ -19,10 +19,17 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
   final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
   late TabController _tabController;
 
+  // Controller dan animation untuk animasi form
+  late AnimationController _formAnimationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
     final controller = Get.find<ClassController>();
+
+    // Inisialisasi TabController
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
@@ -30,14 +37,43 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
             _tabController.index == 0 ? ClassCategory.populer : ClassCategory.spl);
       }
     });
+
+    // Inisialisasi AnimationController untuk form
+    _formAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    // Scale animation untuk efek zoom
+    _scaleAnimation = CurvedAnimation(
+      parent: _formAnimationController,
+      curve: Curves.easeOutBack,
+    );
+
+    // Fade animation untuk efek muncul perlahan
+    _fadeAnimation = CurvedAnimation(
+      parent: _formAnimationController,
+      curve: Curves.easeIn,
+    );
+
+    // Listener untuk meng-trigger animasi saat form muncul/disappear
+    controller.isFormVisible.listen((visible) {
+      if (visible) {
+        _formAnimationController.forward();
+      } else {
+        _formAnimationController.reverse();
+      }
+    });
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _formAnimationController.dispose();
     super.dispose();
   }
 
+  // Fungsi untuk mengeksekusi menu Edit/Delete
   void _handleMenuItemSelected(ClassOption option, ClassModel data) {
     final controller = Get.find<ClassController>();
     if (option == ClassOption.edit) {
@@ -47,6 +83,7 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
     }
   }
 
+  // Dialog konfirmasi hapus
   Future<void> _showDeleteConfirmation(ClassModel data) async {
     final controller = Get.find<ClassController>();
     await Get.dialog<bool>(
@@ -68,6 +105,7 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
     );
   }
 
+  // Widget form yang sudah ada
   Widget _buildForm() {
     final controller = Get.find<ClassController>();
     return Obx(() {
@@ -167,6 +205,18 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
     });
   }
 
+  // Form dengan animasi zoom + fade
+  Widget _buildFormWithAnimation() {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: _buildForm(),
+      ),
+    );
+  }
+
+  // Widget list kelas
   Widget _buildClassList() {
     final controller = Get.find<ClassController>();
     return Obx(() {
@@ -216,23 +266,26 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
           ],
         ),
       ),
-body: SingleChildScrollView(
-  padding: const EdgeInsets.all(16),
-  child: Column(
-    children: [
-      Obx(() => Get.find<ClassController>().isFormVisible.value ? _buildForm() : const SizedBox()),
-      const SizedBox(height: 12),
-      _buildClassList(),
-    ],
-  ),
-),
-floatingActionButton: FloatingActionButton.extended(
-  onPressed: () => Get.find<ClassController>().showAddForm(), // tombol menampilkan form
-  backgroundColor: Colors.green,
-  icon: const Icon(Icons.add, color: Colors.white),
-  label: Text('Tambah Kelas', style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.w500)),
-),
-
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Tampilkan form dengan animasi
+            Obx(() => controller.isFormVisible.value
+                ? _buildFormWithAnimation()
+                : const SizedBox()),
+            const SizedBox(height: 12),
+            _buildClassList(),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => controller.showAddForm(),
+        backgroundColor: Colors.green,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: Text('Tambah Kelas',
+            style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.w500)),
+      ),
     );
   }
 }

@@ -2,11 +2,16 @@ import 'dart:io';
 import 'package:get/get.dart';
 import '../../data/repositories/class_repository.dart';
 import '../../domain/entities/class_model.dart';
+import '../../data/providers/notification_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart'; //nambahin ini ya
+
 
 enum ClassCategory { populer, spl }
 
 class ClassController extends GetxController {
   final ClassRepository repository;
+  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+
 
   ClassController(this.repository);
 
@@ -61,21 +66,31 @@ class ClassController extends GetxController {
   }
 
   Future<void> submitAddClass(Map<String, dynamic> data, {File? imageFile}) async {
-    try {
-      isLoading.value = true;
-      if (imageFile != null) {
-        await repository.addClassWithImage(data, imageFile);
-      } else {
-        await repository.addClassWithoutImage(data);
-      }
-      await fetchClasses(selectedCategory.value);
-      hideForm();
-    } catch (e) {
-      errorMessage.value = e.toString();
-    } finally {
-      isLoading.value = false;
+  try {
+    isLoading.value = true;
+    if (imageFile != null) {
+      await repository.addClassWithImage(data, imageFile);
+    } else {
+      await repository.addClassWithoutImage(data);
     }
+
+    // Kirim notifikasi otomatis setelah kelas berhasil ditambahkan
+    await NotificationService().sendTopicNotification(
+      topic: "kelas",
+      title: "Kelas Baru Ditambahkan 🎉",
+      body: "Kelas ${data['title']} kini tersedia!",
+      data: {"className": data['title']},
+    );
+
+    await fetchClasses(selectedCategory.value);
+    hideForm();
+  } catch (e) {
+    errorMessage.value = e.toString();
+  } finally {
+    isLoading.value = false;
   }
+}
+
 
   Future<void> submitEditClass(Map<String, dynamic> data, {File? imageFile}) async {
     if (classToEdit.value == null) return;
