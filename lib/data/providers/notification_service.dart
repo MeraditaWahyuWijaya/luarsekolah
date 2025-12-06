@@ -5,12 +5,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:luarsekolah/presentation/controllers/main_controller.dart';
 import 'package:luarsekolah/data/providers/local_notification_service.dart';
-
+//fcm
 class NotificationService {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotif = FlutterLocalNotificationsPlugin();
 
   Future<void> initialize() async {
+    // Request notification permissions
     NotificationSettings settings = await _fcm.requestPermission(
       alert: true,
       badge: true,
@@ -23,18 +24,22 @@ class NotificationService {
       print('Notification permission denied');
     }
 
+    // Initialize local notifications
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     await _localNotif.initialize(
       const InitializationSettings(android: androidSettings),
     );
 
+    // Get FCM token
     String? token = await getFCMToken();
     print('FCM Token: $token');
 
+    // Handle notification if app was launched from a notification
     await _handleInitialMessage();
   }
 
   void startFCMListener() {
+    // Listen for foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       final notification = message.notification;
       final data = message.data;
@@ -48,6 +53,7 @@ class NotificationService {
       }
     });
 
+    // Listen for messages opened from background
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       final todoId = message.data['todoId'];
       if (todoId != null) {
@@ -65,6 +71,7 @@ class NotificationService {
     if (message != null) {
       final todoId = message.data['todoId'];
       if (todoId != null) {
+        // Delay to ensure UI is ready
         Future.delayed(const Duration(milliseconds: 500), () {
           Get.find<MainController>().handleNotificationClick(todoId);
         });
@@ -78,7 +85,7 @@ class NotificationService {
     required String body,
     Map<String, String>? data,
   }) async {
-    const serverKey = "<SERVER_KEY_FIREBASE>"; 
+    const serverKey = "<SERVER_KEY_FIREBASE>";
     final url = Uri.parse("https://fcm.googleapis.com/fcm/send");
 
     final payload = {

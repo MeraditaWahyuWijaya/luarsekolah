@@ -3,6 +3,8 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:luarsekolah/presentation/widgets/hover_card.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:luarsekolah/data/providers/firebase_auth_service.dart';
+import 'dart:io'; // untuk FileImage
+import 'package:shared_preferences/shared_preferences.dart'; // untuk simpan path foto
 
 
 
@@ -11,9 +13,11 @@ class HomeScreen extends StatefulWidget {
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
+  
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String? profilePhotoPath; 
   final Color primaryGreen = const Color.fromRGBO(7, 126, 96, 1);
   final User? user = FirebaseAuth.instance.currentUser; // ambil user di build atau initState
   final List<String> bannerImages = [
@@ -23,6 +27,20 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   int _notificationCount = 3;
+
+   // initState untuk load foto profil
+  @override
+  void initState() {
+    super.initState();
+    _loadProfilePhoto();
+  }
+
+  Future<void> _loadProfilePhoto() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      profilePhotoPath = prefs.getString('userProfilePhoto');
+    });
+  }
 
   Widget _buildBanner() {
     return Container(
@@ -386,11 +404,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   children: [
                    CircleAvatar(
-                    backgroundImage: user?.photoURL != null
-                        ? NetworkImage(user!.photoURL!)
-                        : const AssetImage('assets/nailong.jpg') as ImageProvider,
-                    radius: 18,
-                  ),
+  backgroundImage: profilePhotoPath != null
+      ? FileImage(File(profilePhotoPath!)) // pakai foto terbaru
+      : user?.photoURL != null
+          ? NetworkImage(user!.photoURL!)
+          : const AssetImage('assets/nailong.jpg') as ImageProvider,
+  radius: 18,
+),
+
                     const SizedBox(width: 12),
 
 

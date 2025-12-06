@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:luarsekolah/presentation/views/register_screen.dart';
 import 'package:luarsekolah/presentation/views/login_screen.dart';
 import 'package:luarsekolah/presentation/views/home_screen.dart';
-
+//animasi di page
 class AppRoutes {
   static const register = '/register';
   static const login = '/login';

@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:luarsekolah/data/providers/storage_helper.dart';
 import 'package:luarsekolah/domain/repositories/i_auth_repository.dart';
-
+//Auth via Firebase
 class FirebaseAuthService implements IAuthRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 

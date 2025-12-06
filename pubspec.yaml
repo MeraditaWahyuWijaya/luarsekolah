@@ -104,6 +104,10 @@ flutter:
   - 'assets/nailong.jpg'
   - 'assets/pestisida.jpg'
   - 'assets/pengolahansampah.png'
+  - 'assets/ui.jpg'
+  - 'assets/dart.jpg'
+  - 'assets/artikel1.png'
+  - 'assets/artikel2.jpg'
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

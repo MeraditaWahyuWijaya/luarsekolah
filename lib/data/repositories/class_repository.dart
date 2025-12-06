@@ -12,12 +12,14 @@ class ClassRepository {
     return data.map((e) => ClassModel.fromMap(e, e['id'])).toList();
   }
 
-  Future<void> addClassWithImage(Map<String, dynamic> data, File imageFile) async {
-    await api.createCourseWithImage(data: data, imageFile: imageFile);
+  // Mengembalikan Future<String> (ID kelas)
+  Future<String> addClassWithImage(Map<String, dynamic> data, File imageFile) async {
+    return await api.createCourseWithImage(data: data, imageFile: imageFile);
   }
 
-  Future<void> addClassWithoutImage(Map<String, dynamic> data) async {
-    await api.createCourseWithoutImage(data);
+  // Mengembalikan Future<String> (ID kelas)
+  Future<String> addClassWithoutImage(Map<String, dynamic> data) async {
+    return await api.createCourseWithoutImage(data);
   }
 
   Future<void> editClass(String id, Map<String, dynamic> data) async {
