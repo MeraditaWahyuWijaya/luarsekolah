@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:luarsekolah/data/providers/storage_keys.dart';
-
+//Helper untuk SharedPreferences / local storage
 class StorageHelper {
   static SharedPreferences? _prefs;
 
@@ -33,6 +33,7 @@ class StorageHelper {
     String? gender,
     String? jobStatus,
     String? dob,
+    String? newPath,
   }) async {
     final prefs = await getInstance();
     await prefs.setString(StorageKeys.userEmail, email);
@@ -43,6 +44,7 @@ class StorageHelper {
     await prefs.setString(StorageKeys.userJobStatus, jobStatus ?? '');
     await prefs.setString(StorageKeys.userDOB, dob ?? '');
     await prefs.setString(StorageKeys.userPassword, password);
+   await prefs.setString(StorageKeys.userProfilePhoto, newPath ?? '');
   }
 
   static Future<void> saveLastEmail(String email) async {
@@ -66,6 +68,7 @@ class StorageHelper {
       'jobStatus': prefs.getString(StorageKeys.userJobStatus) ?? '',
       'dob': prefs.getString(StorageKeys.userDOB) ?? '',
       'password': prefs.getString(StorageKeys.userPassword) ?? '',
+      'profilePhotoPath': prefs.getString(StorageKeys.userProfilePhoto) ?? '',
     };
   }
 

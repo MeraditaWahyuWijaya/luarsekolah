@@ -1,5 +1,5 @@
 import 'package:luarsekolah/domain/repositories/i_auth_repository.dart';
-
+//Implementasi IAuthRepository
 class AuthRepository implements IAuthRepository {
   final IAuthRepository _service;
 

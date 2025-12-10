@@ -80,48 +80,40 @@ class TodoController extends GetxController {
   }
 
   // Tambah todo baru
-  Future<void> addTodo(String text) async {
-    if (text.isEmpty) return;
-    isLoading(true);
+Future<void> addTodo(String text) async {
+  if (text.isEmpty) return;
 
-    try {
-      // Tambah todo ke service dan dapatkan ID baru
-      final newTodo = await _firestoreService.createTodo(text);
+  try {
+    final newTodo = await _firestoreService.createTodo(text);
 
-      // Jika bukan mode test, tampilkan notifikasi lokal
-      if (!isTest) {
-        LocalNotificationService.show(
-          title: 'Catatan Baru',
-          body: 'Catatan baru telah berhasil ditambahkan!',
-          payload: newTodo.id,
-        );
+    todos.add(newTodo);
 
-        // Snackbar sebagai feedback UI
-        Get.snackbar(
-          'Sukses',
-          'Todo berhasil ditambahkan!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.shade400,
-          colorText: Colors.white,
-        );
-      }
+    // Snackbar
+    Get.snackbar(
+      'Sukses',
+      'Todo berhasil ditambahkan!',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green.shade400,
+      colorText: Colors.white,
+    );
 
-      // Update UI langsung
-      todos.add(newTodo);
-    } catch (e) {
-      if (!isTest) {
-        Get.snackbar(
-          'Gagal menambah Todo',
-          e.toString(),
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade400,
-          colorText: Colors.white,
-        );
-      }
-    } finally {
-      isLoading(false);
-    }
+    // Local Notification
+    LocalNotificationService.show(
+      title: 'Catatan Baru',
+      body: text,
+      payload: newTodo.id,
+    );
+  } catch (e) {
+    Get.snackbar(
+      'Gagal menambah Todo',
+      e.toString(),
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red.shade400,
+      colorText: Colors.white,
+    );
   }
+}
+
 
   // Toggle status todo (selesai / belum)
   Future<void> toggleTodo(String id) async {

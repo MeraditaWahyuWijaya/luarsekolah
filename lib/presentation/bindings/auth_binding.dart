@@ -7,7 +7,7 @@ import 'package:luarsekolah/domain/usecases/logout_usecase.dart';
 import 'package:luarsekolah/presentation/controllers/auth_controller.dart';
 import 'package:luarsekolah/domain/repositories/i_auth_repository.dart';
 
-
+//Inject AuthController + usecase
 class AuthBinding extends Bindings {
   @override
   void dependencies() {

@@ -35,14 +35,5 @@ class MainController extends GetxController {
     Get.toNamed('/todo_detail', parameters: {'id': todoId});
   }
 
-  /// Contoh jadwal notifikasi offline 1 jam dari sekarang
-  void scheduleTestReminder() {
-    DateTime scheduledTime = DateTime.now().add(const Duration(hours: 1));
-    LocalNotificationService.schedule(
-      title: 'Pengingat Otomatis',
-      body: 'Ini adalah pengingat yang dijadwalkan.',
-      scheduledTime: scheduledTime,
-      payload: 'todo_offline_123',
-    );
-  }
+  // NOTE: Fungsi scheduleTestReminder dihapus karena kita hanya pakai notifikasi instan
 }

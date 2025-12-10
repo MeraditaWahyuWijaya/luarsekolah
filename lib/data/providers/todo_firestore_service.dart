@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:luarsekolah/domain/entities/todo.dart'; // Sesuaikan dengan path entity Todo Anda
-
+//CRUD Todo ke Firestore
 class TodoFirestoreService {
   // Inisialisasi Firestore instance
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

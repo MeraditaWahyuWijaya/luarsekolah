@@ -10,7 +10,7 @@ import 'package:luarsekolah/presentation/controllers/todo_controllers.dart';
 import '../bindings/class_binding.dart';
 import '../bindings/todo_binding.dart';
 import 'package:luarsekolah/presentation/controllers/class_controllers.dart';
-
+//BOTTOMBAR
 const Color _kGreen = Color.fromRGBO(7, 126, 96, 1);
 
 class CustomBottomNavBar extends StatelessWidget {

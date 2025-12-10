@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+// Card dengan hover effect
 class CourseCardWithHover extends StatefulWidget {
   final String title;
   final double rating;
