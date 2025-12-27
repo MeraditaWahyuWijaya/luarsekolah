@@ -99,7 +99,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+     await prefs.remove('userToken'); //awalnya di clear jadinya data ilang pas masuk lg
 
     if (mounted) {
       Navigator.pushAndRemoveUntil(
