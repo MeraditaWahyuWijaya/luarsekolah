@@ -187,7 +187,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
-  // --- Komponen UI: Indikator Validasi ---
+  //Komponen UI: Indikator Validasi
   // Membangun elemen UI untuk menunjukkan status validasi password/telepon
   Widget _buildValidationItem(String text, bool isValid) {
     return Padding(
@@ -297,15 +297,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
-  // --- Komponen UI: Formulir Registrasi Utama (Index 0) ---
+  //  Komponen UI: Formulir Registrasi Utama (Index 0)
   Widget _buildRegistrationFields(bool isPhoneAllValid, bool isPasswordAllValid) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start, 
       children: [
         const SizedBox(height: 3),
         // Logo
-        Image.asset('assets/luarsekolahlogo.png', height: 40), // Asumsi: 'assets/luarsekolahlogo.png' tersedia
-        const SizedBox(height: 10),
+        Image.asset('assets/luarsekolahlogo.png', height: 40), 
         Text("Daftarkan Akun Untuk Lanjut Akses ke Luarsekolah",
             style: GoogleFonts.montserrat(
                 fontSize: 16, fontWeight: FontWeight.bold)),

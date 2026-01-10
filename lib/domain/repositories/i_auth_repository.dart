@@ -1,4 +1,7 @@
+import '../entities/user_entity.dart';
+
 abstract class IAuthRepository {
+  //Abstraksi AuthRepository
   //ini menjaga biar logika domain tidak terikat hanya pada satu implemen data spesifik
   Future<void> register({
     required String name,
@@ -13,4 +16,5 @@ abstract class IAuthRepository {
   });
 
   Future<void> logout();
+  Future<UserEntity?> getCurrentUserData();
 }

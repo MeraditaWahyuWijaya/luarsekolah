@@ -1,4 +1,5 @@
 class ClassModel {
+  //Model data kelas
   final String id;
   final String title;
   final int price;
