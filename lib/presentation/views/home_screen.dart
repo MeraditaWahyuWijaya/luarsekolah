@@ -5,6 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:luarsekolah/data/providers/firebase_auth_service.dart';
 import 'dart:io'; // untuk FileImage
 import 'package:shared_preferences/shared_preferences.dart'; // untuk simpan path foto
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 
 
 
@@ -26,13 +29,51 @@ class _HomeScreenState extends State<HomeScreen> {
     'assets/bannercar2.jpg',
   ];
 
-  int _notificationCount = 3;
+    List<Map<String, dynamic>> notifications = [];
+
+     int get _notificationCount =>
+      notifications.where((n) => n['isRead'] == false).length;
+
+     void listenClassNotifications() {
+  if (user == null) return;
+
+  FirebaseFirestore.instance
+      .collection('class_notifications')
+      .where('userId', isEqualTo: user!.uid)
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .listen((snapshot) {
+    setState(() {
+      notifications = snapshot.docs.map((doc) {
+        return {
+          'id': doc.id,
+          'title': doc['title'],
+          'isRead': doc['isRead'],
+        };
+      }).toList();
+    });
+  });
+}
+Future<void> openCustomerServiceEmail() async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: 'luarsekolah@gmail.com',
+      query: 'subject=Bantuan Aplikasi&body=Halo tim LuarSekolah,%0A%0ASaya membutuhkan bantuan terkait...',
+    );
+
+    if (await canLaunchUrl(emailUri)) {
+      await launchUrl(emailUri);
+    }
+  }
+
+
 
    // initState untuk load foto profil
   @override
   void initState() {
     super.initState();
     _loadProfilePhoto();
+     listenClassNotifications();
   }
 
   Future<void> _loadProfilePhoto() async {
@@ -437,15 +478,49 @@ class _HomeScreenState extends State<HomeScreen> {
                     
                     Stack(
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.notifications_none,
-                              size: 30, color: Colors.white),
-                          onPressed: () {
-                            setState(() {
-                              _notificationCount = 0;
-                            });
-                          },
-                        ),
+                       IconButton(
+  icon: const Icon(Icons.notifications_none,
+      size: 30, color: Colors.white),
+  onPressed: () {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return ListView.builder(
+          itemCount: notifications.length,
+          itemBuilder: (context, index) {
+            final notif = notifications[index];
+            return ListTile(
+              leading: Icon(
+                Icons.notifications,
+                color: notif['isRead'] ? Colors.grey : Colors.blue,
+              ),
+              title: Text(
+                notif['title'],
+                style: TextStyle(
+                  fontWeight:
+                      notif['isRead'] ? FontWeight.normal : FontWeight.bold,
+                ),
+              ),
+              onTap: () {
+                setState(() {
+                  notifications[index]['isRead'] = true;
+                });
+
+                FirebaseFirestore.instance
+                    .collection('class_notifications')
+                    .doc(notif['id'])
+                    .update({'isRead': true});
+
+                Navigator.pop(context);
+              },
+            );
+          },
+        );
+      },
+    );
+  },
+),
+
                         
                         if (_notificationCount > 0)
                           Positioned(
@@ -473,8 +548,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                           ),
+                          IconButton(
+                    icon: const Icon(Icons.chat_bubble_outline,
+                        size: 28, color: Colors.white),
+                    onPressed: () {
+                      openCustomerServiceEmail();
+                    },
+                  ),
                       ],
                     ),
+                    
                   ],
                 ),
               ),
