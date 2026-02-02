@@ -7,6 +7,9 @@ import 'dart:io'; // untuk FileImage
 import 'package:shared_preferences/shared_preferences.dart'; // untuk simpan path foto
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:get/get.dart';
+import 'package:luarsekolah/presentation/views/content_detail_view.dart'; //isi artikel 
+
 
 
 
@@ -333,12 +336,24 @@ Future<void> openCustomerServiceEmail() async {
     );
   }
 
-  Widget _buildArticleCardContent(String title, String snippet, String imageUrl) {
-    return Padding(
+  Widget _buildArticleCardContent(String title, String snippet, String imageUrl, String fullContent) {
+    return InkWell(
+    borderRadius: BorderRadius.circular(12),
+    onTap: () {
+      Get.to(
+        () => const ContentDetailView(),
+        arguments: {
+          'title': title,
+          'content': fullContent,
+          'image': imageUrl,
+          'type': 'article',
+        },
+      );
+    },
+    child: Padding(
       padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
@@ -350,28 +365,33 @@ Future<void> openCustomerServiceEmail() async {
             ),
           ),
           const SizedBox(height: 12),
-          Text(title,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Text(
-              snippet,
-              style: TextStyle(color: Colors.grey[700]),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            snippet,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: Colors.grey[700]),
           ),
           const SizedBox(height: 8),
           const Text(
             'Baca selengkapnya',
-            style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.blue,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
-    );
-  }
-
+    ),
+  );
+}
   Widget _buildMagangBanner() {
     return Container(
       height: 200,
@@ -723,16 +743,18 @@ Future<void> openCustomerServiceEmail() async {
                           HoverEffectWrapper(
                             width: 200,
                             child: _buildArticleCardContent(
-                                'Transformasi Digital Pendidikan: Tantangan dan...',
-                                'Artikel ini membahas secara mendalam bagaiman...',
-                                'assets/artikel1.png'),
+                                  'Transformasi Digital Pendidikan: Tantangan dan...',
+                                  'Artikel ini membahas secara mendalam bagaiman...',
+                                  'assets/artikel1.png',
+                                  'ISI ARTIKEL LENGKAP TRANSFORMASI DIGITAL DI SINI...'),
                           ),
                           HoverEffectWrapper(
                             width: 200,
                             child: _buildArticleCardContent(
                                 'Menerapkan Pembelajaran Berbasis Proyek (PBL)...',
                                 'Pembelajaran Berbasis Proyek (Project-Based Learn...',
-                                'assets/artikel2.jpg'),
+                                'assets/artikel2.jpg',
+                                'ISI ARTIKEL LENGKAP MENERAPKAN PEMBELAJARAN DISINI...'),
                           ),
                         ],
                       ),
