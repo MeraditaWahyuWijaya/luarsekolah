@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../controllers/course_progress_controller.dart';
+import '../controllers/course_detail_controller.dart';
 import 'course_detail_view.dart';
+import '../controllers/course_progress_controller.dart';
 
 const String kBannerAsset = 'assets/banner.png';
 const Color _kTeal = Colors.teal;
@@ -11,8 +12,7 @@ class MyClassScreen extends StatelessWidget {
   MyClassScreen({super.key});
 
   // Inject controller agar bisa dipakai di halaman lain
-  final CourseProgressController progressController =
-      Get.put(CourseProgressController());
+  final CourseProgressController progressController = Get.put(CourseProgressController());
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class MyClassScreen extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(16),
           child: Text(
-            'Lanjutkan Kembali Progres Belajarmu, Meradita.',
+            'Lanjutkan Kembali Progres Belajarmu hari ini!.',
             style: GoogleFonts.montserrat(
               fontSize: 18,
               fontWeight: FontWeight.bold,

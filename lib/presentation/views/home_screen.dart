@@ -192,7 +192,7 @@ Future<void> openCustomerServiceEmail() async {
       SizedBox( 
         width: 250,
         child: const Text(
-          'Kamu pengguna Prakerja? Segera redeem vouchermu sekarang juga',
+          'Kamu pengguna Luarsekolah? Segera redeem dengan upload bukti transfermu sekarang juga',
           // Ubah textAlign menjadi TextAlign.center agar teks di tengah di dalam SizedBox
           textAlign: TextAlign.center, 
           style: TextStyle(

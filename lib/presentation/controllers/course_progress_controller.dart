@@ -1,19 +1,24 @@
 import 'package:get/get.dart';
 
 class CourseProgressController extends GetxController {
-  // Menyimpan progress setiap kelas
-  // Key: judul kelas (sementara)
-  // Value: progress 0 - 100
-  final RxMap<String, int> progressMap = <String, int>{}.obs;
+  // Variabel reaktif untuk menyimpan progres kursus (Judul: Persentase)
+  var courseProgress = <String, int>{
+    'Membangun Usaha Bengkel': 0,
+  }.obs;
 
-  // Ambil progress kelas
-  int getProgress(String courseTitle) {
-    return progressMap[courseTitle] ?? 0;
+  // Fungsi untuk mengambil angka progres berdasarkan judul
+  int getProgress(String title) {
+    return courseProgress[title] ?? 0;
   }
 
-  // Tandai kelas selesai
-  void markCompleted(String courseTitle) {
-    progressMap[courseTitle] = 100;
+  // Fungsi untuk menandai kursus selesai (100%)
+  void markCompleted(String title) {
+    courseProgress[title] = 100;
+    print("Progres $title berhasil diperbarui menjadi 100%");
+  }
+
+  // Opsional: Fungsi untuk reset progres jika diperlukan
+  void resetProgress(String title) {
+    courseProgress[title] = 0;
   }
 }
-
