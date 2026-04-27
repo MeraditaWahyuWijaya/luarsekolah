@@ -10,7 +10,6 @@ class CourseDetailController extends GetxController {
   var isVideoFinished = false.obs;
   
   final String title = Get.arguments['title'];
-  final String videoUrl = "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4";
 
   @override
   void onInit() {
@@ -19,7 +18,8 @@ class CourseDetailController extends GetxController {
   }
 
   Future<void> initializePlayer() async {
-    videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+    // GANTI DI SINI: Dari networkUrl menjadi asset
+    videoPlayerController = VideoPlayerController.asset("assets/materidesign.mp4");
     
     await videoPlayerController!.initialize();
 

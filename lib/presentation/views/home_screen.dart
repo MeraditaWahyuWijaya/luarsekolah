@@ -11,9 +11,6 @@ import 'package:get/get.dart';
 import 'package:luarsekolah/presentation/views/content_detail_view.dart'; //isi artikel 
 
 
-
-
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -178,7 +175,7 @@ Future<void> openCustomerServiceEmail() async {
     mainAxisSize: MainAxisSize.min,
     children: [
       const Text(
-        'Redeem Voucher Prakerjamu',
+        'Upload Bukti Transfer',
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 16,
@@ -205,7 +202,7 @@ Future<void> openCustomerServiceEmail() async {
                 const SizedBox(height: 15),
                 OutlinedButton(
                   onPressed: () {
-                    print('Masukkan voucher Prakerja');
+                    print('Upload Bukti Transfer');
                   },
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: primaryGreen),
@@ -216,7 +213,7 @@ Future<void> openCustomerServiceEmail() async {
                         horizontal: 16, vertical: 12),
                   ),
                   child: const Text(
-                    'Masukkan Voucher Prakerja',
+                    'Upload Bukti Transfer',
                     style: TextStyle(fontSize: 14, color: Colors.black),
                   ),
                 ),
@@ -496,87 +493,87 @@ Future<void> openCustomerServiceEmail() async {
                     ),
                     const Spacer(),
                     
-                    Stack(
-                      children: [
-                       IconButton(
-  icon: const Icon(Icons.notifications_none,
-      size: 30, color: Colors.white),
-  onPressed: () {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return ListView.builder(
-          itemCount: notifications.length,
-          itemBuilder: (context, index) {
-            final notif = notifications[index];
-            return ListTile(
-              leading: Icon(
-                Icons.notifications,
-                color: notif['isRead'] ? Colors.grey : Colors.blue,
-              ),
-              title: Text(
-                notif['title'],
-                style: TextStyle(
-                  fontWeight:
-                      notif['isRead'] ? FontWeight.normal : FontWeight.bold,
-                ),
-              ),
-              onTap: () {
-                setState(() {
-                  notifications[index]['isRead'] = true;
-                });
+                  //Stack(
+                      //children:(
+                       //IconButton(
+  //icon: const Icon(Icons.notifications_none,
+      //size: 30, color: Colors.white),
+  //onPressed: () {
+    //showModalBottomSheet(
+      //context: context,
+      //builder: (context) {
+        //return ListView.builder(
+          //itemCount: notifications.length,
+          //itemBuilder: (context, index) {
+            //final notif = notifications[index];
+            //return ListTile(
+              //leading: Icon(
+                //Icons.notifications,
+                //color: notif['isRead'] ? Colors.grey : Colors.blue,
+              //),
+              //title: Text(
+                //notif['title'],
+                //style: TextStyle(
+                  //fontWeight:
+                      //notif['isRead'] ? FontWeight.normal : FontWeight.bold,
+                //),
+              //),
+              //onTap: () {
+                //setState(() {
+                  //notifications[index]['isRead'] = true;
+                //});
 
-                FirebaseFirestore.instance
-                    .collection('class_notifications')
-                    .doc(notif['id'])
-                    .update({'isRead': true});
+                //FirebaseFirestore.instance
+                    //.collection('class_notifications')
+                    //.doc(notif['id'])
+                    //.update({'isRead': true});
 
-                Navigator.pop(context);
-              },
-            );
-          },
-        );
-      },
-    );
-  },
-),
+                //Navigator.pop(context);
+              //},
+            //);
+          //},
+        //);
+      //},
+    //);
+  //},
+//),
 
                         
-                        if (_notificationCount > 0)
-                          Positioned(
-                            right: 8, 
-                            top: 8,
-                            child: Container(
-                              padding: const EdgeInsets.all(4), 
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(10), 
-                              ),
-                              constraints: const BoxConstraints(
-                                minWidth: 16, 
-                                minHeight: 16,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  _notificationCount > 9 ? '9+' : '$_notificationCount',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                    icon: const Icon(Icons.chat_bubble_outline,
-                        size: 28, color: Colors.white),
-                    onPressed: () {
-                      openCustomerServiceEmail();
-                    },
-                  ),
-                      ],
-                    ),
+                        //if (_notificationCount > 0)
+                          //Positioned(
+                            //right: 8, 
+                            //top: 8,
+                            //child: Container(
+                              //padding: const EdgeInsets.all(4), 
+                              //decoration: BoxDecoration(
+                                //color: Colors.red,
+                                //borderRadius: BorderRadius.circular(10), 
+                              //),
+                              //constraints: const BoxConstraints(
+                                //minWidth: 16, 
+                                //minHeight: 16,
+                              //),
+                              //child: Center(
+                                //child: Text(
+                                  //_notificationCount > 9 ? '9+' : '$_notificationCount',
+                                  //style: const TextStyle(
+                                    //color: Colors.white,
+                                    //fontSize: 10,
+                                    //fontWeight: FontWeight.bold,
+                                  //),
+                                //),
+                              //),
+                            //),
+                          //),
+                          //IconButton(
+                    //icon: const Icon(Icons.chat_bubble_outline,
+                        //size: 28, color: Colors.white),
+                    //onPressed: () {
+                      //openCustomerServiceEmail();
+                    //},
+                  //),
+                      //],
+                    //),
                     
                   ],
                 ),

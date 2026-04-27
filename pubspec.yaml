@@ -112,6 +112,9 @@ flutter:
   - 'assets/artikel1.png'
   - 'assets/artikel2.jpg'
   - 'assets/todo.png'
+  - 'assets/materidesign.mp4'
+  - 'assets/designgrafis.jpg'
+  - 'assets/template_sertifikat.png'
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

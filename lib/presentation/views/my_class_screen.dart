@@ -5,7 +5,7 @@ import '../controllers/course_detail_controller.dart';
 import 'course_detail_view.dart';
 import '../controllers/course_progress_controller.dart';
 
-const String kBannerAsset = 'assets/banner.png';
+const String kBannerAsset = 'assets/designgrafis.jpg';
 const Color _kTeal = Colors.teal;
 
 class MyClassScreen extends StatelessWidget {
@@ -24,27 +24,27 @@ class MyClassScreen extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(16),
           child: Text(
-            'Lanjutkan Kembali Progres Belajarmu hari ini!.',
+            'Lanjutkan Kembali Progres Belajarmu hari ini!',
             style: GoogleFonts.montserrat(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
 
-        Expanded(
-          child: ListView(
-            children: [
-              Obx(() => CourseProgressCard(
-                    title: 'Membangun Usaha Bengkel',
-                    provider: 'Luarsekolah',
-                    progress: progressController
-                        .getProgress('Membangun Usaha Bengkel'),
-                    imageAsset: kBannerAsset,
-                  )),
-            ],
-          ),
-        ),
+       Expanded(
+  child: ListView(
+    children: [
+      Obx(() => CourseProgressCard(
+            title: 'Belajar Dasar Design Grafis', // Pakai Huruf Besar di tiap awal kata
+            provider: 'Luarsekolah',
+            progress: progressController
+                .getProgress('Belajar Dasar Design Grafis'), // Samakan persis!
+            imageAsset: kBannerAsset,
+          )),
+    ],
+  ),
+),
       ],
     );
   }
