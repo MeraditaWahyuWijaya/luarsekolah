@@ -67,6 +67,7 @@ class ContentDetailView extends StatelessWidget {
                   // Isi utama konten
                   Text(
                     content,
+                    textAlign: TextAlign.justify,
                     style: const TextStyle(
                       fontSize: 16,
                       height: 1.6,

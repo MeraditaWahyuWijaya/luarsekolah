@@ -8,7 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart'; // untuk simpan pat
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:get/get.dart';
-import 'package:luarsekolah/presentation/views/content_detail_view.dart'; //isi artikel 
+import 'package:luarsekolah/presentation/views/content_detail_view.dart';
+import 'package:image_picker/image_picker.dart';
+ //isi artikel 
 
 
 class HomeScreen extends StatefulWidget {
@@ -28,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'assets/bannercar1.jpg',
     'assets/bannercar2.jpg',
   ];
-
+    bool isUploaded = false;
     List<Map<String, dynamic>> notifications = [];
 
      int get _notificationCount =>
@@ -138,6 +140,16 @@ Future<void> openCustomerServiceEmail() async {
   }
 
   Widget _buildVoucherInputCard() {
+    Future<void> pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        isUploaded = true;
+      });
+    }
+  }
     return Container(
       padding: const EdgeInsets.all(16), 
       decoration: BoxDecoration(
@@ -200,23 +212,35 @@ Future<void> openCustomerServiceEmail() async {
         ),
       ),
                 const SizedBox(height: 15),
-                OutlinedButton(
-                  onPressed: () {
-                    print('Upload Bukti Transfer');
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: primaryGreen),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                  ),
-                  child: const Text(
-                    'Upload Bukti Transfer',
-                    style: TextStyle(fontSize: 14, color: Colors.black),
-                  ),
-                ),
+               OutlinedButton(
+  onPressed: isUploaded ? null : () async {
+    // Fungsi untuk ambil foto
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        isUploaded = true; // Mengubah status jadi berhasil
+      });
+    }
+  },
+  style: OutlinedButton.styleFrom(
+    // Warna border jadi abu-abu kalau sudah berhasil
+    side: BorderSide(color: isUploaded ? Colors.grey : primaryGreen),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  ),
+  child: Text(
+    isUploaded ? 'Berhasil mengaktifkan kelas' : 'Upload Bukti Transfer',
+    style: TextStyle(
+      fontSize: 14, 
+      color: isUploaded ? primaryGreen : Colors.black,
+      fontWeight: isUploaded ? FontWeight.bold : FontWeight.normal,
+    ),
+  ),
+)
               ],
             ),
           ),
@@ -492,89 +516,6 @@ Future<void> openCustomerServiceEmail() async {
                       ],
                     ),
                     const Spacer(),
-                    
-                  //Stack(
-                      //children:(
-                       //IconButton(
-  //icon: const Icon(Icons.notifications_none,
-      //size: 30, color: Colors.white),
-  //onPressed: () {
-    //showModalBottomSheet(
-      //context: context,
-      //builder: (context) {
-        //return ListView.builder(
-          //itemCount: notifications.length,
-          //itemBuilder: (context, index) {
-            //final notif = notifications[index];
-            //return ListTile(
-              //leading: Icon(
-                //Icons.notifications,
-                //color: notif['isRead'] ? Colors.grey : Colors.blue,
-              //),
-              //title: Text(
-                //notif['title'],
-                //style: TextStyle(
-                  //fontWeight:
-                      //notif['isRead'] ? FontWeight.normal : FontWeight.bold,
-                //),
-              //),
-              //onTap: () {
-                //setState(() {
-                  //notifications[index]['isRead'] = true;
-                //});
-
-                //FirebaseFirestore.instance
-                    //.collection('class_notifications')
-                    //.doc(notif['id'])
-                    //.update({'isRead': true});
-
-                //Navigator.pop(context);
-              //},
-            //);
-          //},
-        //);
-      //},
-    //);
-  //},
-//),
-
-                        
-                        //if (_notificationCount > 0)
-                          //Positioned(
-                            //right: 8, 
-                            //top: 8,
-                            //child: Container(
-                              //padding: const EdgeInsets.all(4), 
-                              //decoration: BoxDecoration(
-                                //color: Colors.red,
-                                //borderRadius: BorderRadius.circular(10), 
-                              //),
-                              //constraints: const BoxConstraints(
-                                //minWidth: 16, 
-                                //minHeight: 16,
-                              //),
-                              //child: Center(
-                                //child: Text(
-                                  //_notificationCount > 9 ? '9+' : '$_notificationCount',
-                                  //style: const TextStyle(
-                                    //color: Colors.white,
-                                    //fontSize: 10,
-                                    //fontWeight: FontWeight.bold,
-                                  //),
-                                //),
-                              //),
-                            //),
-                          //),
-                          //IconButton(
-                    //icon: const Icon(Icons.chat_bubble_outline,
-                        //size: 28, color: Colors.white),
-                    //onPressed: () {
-                      //openCustomerServiceEmail();
-                    //},
-                  //),
-                      //],
-                    //),
-                    
                   ],
                 ),
               ),
@@ -625,7 +566,7 @@ Future<void> openCustomerServiceEmail() async {
                     _buildVoucherInputCard(),
                     const SizedBox(height: 20),
 
-                    const Text('Kelas Terpopuler di Prakerja',
+                    const Text('Kelas Terpopuler di Luarsekolah',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 18)),
                     const SizedBox(height: 12),
@@ -639,14 +580,14 @@ Future<void> openCustomerServiceEmail() async {
                               rating: 4.5,
                               price: 'Rp 1.500.000',
                               imageUrl: 'assets/poster1.png',
-                              tags: const ['Prakerja'], //prakerja hijau 
+                              tags: const ['Tersedia'], //prakerja hijau 
                           ),
                           CourseCardWithHover(
                               title: 'Meningkatkan Pertumbuhan Tanaman',
                               rating: 4.5,
                               price: 'Rp 1.500.000',
                               imageUrl: 'assets/poster2.png',
-                              tags: const ['Prakerja'],
+                              tags: const ['Tersedia'],
                           ),
                         ],
                       ),
@@ -726,24 +667,25 @@ Future<void> openCustomerServiceEmail() async {
                         ],
                       ),
                     ),
-
+                  
                     const SizedBox(height: 24),
                     const Text('Artikel',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 18)),
                     const SizedBox(height: 12),
                     SizedBox(
-                      height: 300,
+                      height: 303,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [
                           HoverEffectWrapper(
                             width: 200,
                             child: _buildArticleCardContent(
-                                  'Transformasi Digital Pendidikan: Tantangan dan...',
+                                  'Transformasi Digital Pendidikan: Tantangan dan Solusinya',
                                   'Artikel ini membahas secara mendalam bagaiman...',
                                   'assets/artikel1.png',
-                                  'ISI ARTIKEL LENGKAP TRANSFORMASI DIGITAL DI SINI...'),
+                                  '''     Transformasi digital dalam dunia pendidikan kini bukan lagi sekadar tren, melainkan sebuah kebutuhan mendasar untuk menyiapkan generasi yang kompeten di era teknologi. Secara esensi, proses ini melibatkan integrasi teknologi informasi ke dalam seluruh aspek pembelajaran, mulai dari manajemen kurikulum hingga interaksi di ruang kelas virtual. Namun, transisi ini menghadapi tantangan besar, terutama terkait kesenjangan akses digital di berbagai daerah. Ketidaksiapan infrastruktur jaringan dan keterbatasan perangkat keras bagi siswa di wilayah terpencil sering kali memperlebar jurang kualitas pendidikan. Selain itu, hambatan muncul dari sisi sumber daya manusia, di mana masih banyak tenaga pendidik yang membutuhkan adaptasi lebih dalam untuk menguasai platform pembelajaran digital secara efektif agar materi yang disampaikan tetap menarik dan tidak membosankan bagi siswa.
+\n\nUntuk mengatasi hambatan tersebut, diperlukan langkah strategis yang komprehensif dari berbagai pihak. Pemerintah dan institusi pendidikan perlu memprioritaskan pembangunan infrastruktur digital yang merata serta menyediakan platform pembelajaran yang ringan dan mudah diakses melalui perangkat seluler. Peningkatan literasi digital bagi guru juga menjadi kunci, agar mereka mampu memanfaatkan fitur-fitur modern seperti sistem manajemen pembelajaran (LMS) berbasis cloud yang memungkinkan distribusi materi secara real-time dan interaktif. Selain itu, aspek keamanan data pribadi siswa harus menjadi prioritas utama dalam setiap pengembangan aplikasi pendidikan guna membangun kepercayaan masyarakat terhadap ekosistem digital. Dengan kolaborasi yang kuat antara teknologi dan kesiapan SDM, transformasi digital diharapkan mampu menciptakan akses pendidikan yang lebih inklusif, fleksibel, dan relevan dengan tuntutan zaman.'''),
                           ),
                           HoverEffectWrapper(
                             width: 200,
@@ -751,7 +693,8 @@ Future<void> openCustomerServiceEmail() async {
                                 'Menerapkan Pembelajaran Berbasis Proyek (PBL)...',
                                 'Pembelajaran Berbasis Proyek (Project-Based Learn...',
                                 'assets/artikel2.jpg',
-                                'ISI ARTIKEL LENGKAP MENERAPKAN PEMBELAJARAN DISINI...'),
+                                '''   Penerapan metode Problem-Based Learning (PBL) dalam ekosistem pendidikan digital mampu mentransformasi peran siswa dari penerima informasi pasif menjadi pemecah masalah yang aktif dan kolaboratif. Melalui pendekatan ini, siswa dihadapkan pada skenario dunia nyata yang relevan dengan bidang minat mereka, sehingga proses belajar tidak lagi terasa teoretis melainkan lebih aplikatif dan bermakna. 
+                                Dengan dukungan teknologi seperti platform kolaborasi daring dan akses literasi digital yang luas, PBL memfasilitasi pengembangan berpikir kritis serta keterampilan teknis secara simultan, yang pada akhirnya sangat efektif untuk membangun kemandirian belajar dan kesiapan profesional di masa depan.'''),
                           ),
                         ],
                       ),

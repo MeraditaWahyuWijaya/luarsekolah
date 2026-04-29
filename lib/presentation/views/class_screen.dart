@@ -109,7 +109,7 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
           ? {
               'title': editData!.title,
               'price': editData.price.toString(),
-              'category': editData.category == "SPL" ? ClassCategory.spl : ClassCategory.populer,
+              'category': editData.category == "Kelasku" ? ClassCategory.spl : ClassCategory.populer,
               'thumbnailUrl': editData.thumbnailUrl,
             }
           : null;
@@ -150,7 +150,7 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
                 decoration: const InputDecoration(labelText: 'Kategori', border: OutlineInputBorder()),
                 items: ClassCategory.values
                     .map((c) => DropdownMenuItem(
-                        value: c, child: Text(c == ClassCategory.populer ? 'Populer' : 'SPL')))
+                        value: c, child: Text(c == ClassCategory.populer ? 'Populer' : 'Kelasku')))
                     .toList(),
               ),
               const SizedBox(height: 12),
@@ -175,7 +175,7 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
                         final mapData = {
                           'title': data['title'],
                           'price': int.parse(data['price']),
-                          'category': data['category'] == ClassCategory.spl ? "SPL" : "Populer",
+                          'category': data['category'] == ClassCategory.spl ? "Kelasku" : "Populer",
                           'thumbnailUrl': data['thumbnailUrl'],
                         };
                         if (isEditing) {
@@ -254,7 +254,7 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
           labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w500),
           tabs: const [
             Tab(text: 'Populer'),
-            Tab(text: 'SPL'),
+            Tab(text: 'Kelasku'),
           ],
         ),
       ),

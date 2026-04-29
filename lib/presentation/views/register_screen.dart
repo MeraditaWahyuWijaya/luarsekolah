@@ -622,7 +622,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
-  // --- Fungsi Build Utama ---
   @override
   Widget build(BuildContext context) {
     // Hitung ulang status validasi (walaupun sudah dilakukan di _updateButtonState, ini untuk passing parameter)

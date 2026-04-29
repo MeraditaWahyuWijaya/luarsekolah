@@ -7,8 +7,8 @@ class CertificateView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Mengambil data nama yang dikirim saat tombol diklik
-    final String userName = Get.arguments['userName'] ?? 'Meradita';
+    // Mengambil nama 'Meradita' yang dikirim dari halaman sebelumnya
+    final String userName = Get.arguments['userName'] ?? 'Peserta';
 
     return Scaffold(
       appBar: AppBar(
@@ -19,21 +19,20 @@ class CertificateView extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Gambar dari Canva yang sudah kamu masukkan ke assets
-            Image.asset('assets/images/template_sertifikat.png'),
-            
-            // Nama kamu yang akan muncul otomatis di atas gambar
-            Positioned(
-              top: 155, // Atur angka ini (naik/turun) sampai pas di posisi nama
-              child: Text(
-                userName,
-                style: GoogleFonts.montserrat(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF2C3E50), // Warna elegan gelap
-                ),
-              ),
-            ),
+            Image.asset('assets/template_sertifikat.png'),
+           Positioned(
+  top: 130, // Tadi 150, kita kurangi jadi 130 agar LEBIH KE ATAS
+  left: 27, // Tambahkan ini untuk menggeser LEBIH KE KIRI. 
+            // (Sesuaikan angkanya sampai pas dengan garis di desain Canva kamu)
+  child: Text(
+    userName,
+    style: GoogleFonts.montserrat(
+      fontSize: 24,
+      fontWeight: FontWeight.bold,
+      color: const Color(0xFF2C3E50),
+    ),
+  ),
+),
           ],
         ),
       ),

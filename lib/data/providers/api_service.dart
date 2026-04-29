@@ -15,8 +15,8 @@ class ApiService {
     Query query = _db.collection('courses');
     if (category.toLowerCase() == 'populer') {
       query = query.where('category', isEqualTo: 'Populer');
-    } else if (category.toLowerCase() == 'spl') {
-      query = query.where('category', isEqualTo: 'SPL');
+    } else if (category.toLowerCase() == 'kelasku') {
+      query = query.where('category', isEqualTo: 'kelasku');
     }
 
     final snapshot = await query.get();
