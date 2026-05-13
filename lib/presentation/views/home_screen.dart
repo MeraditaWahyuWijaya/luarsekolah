@@ -507,7 +507,7 @@ Future<void> openCustomerServiceEmail() async {
                               TextStyle(fontSize: 12, color: Colors.white70),
                         ),
                         Text(
-                          user?.displayName ?? 'User',
+                          user?.displayName ?? 'User',//diganti usernya 
                           style: TextStyle(
                               fontWeight: FontWeight.w500,
                               fontSize: 16,
