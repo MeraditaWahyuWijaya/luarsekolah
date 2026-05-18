@@ -13,26 +13,26 @@ class CourseDetailView extends StatelessWidget {
     final controller = Get.put(CourseDetailController());
 
     return Scaffold(
-      /* SafeArea digunakan supaya konten tidak tertutup notch atau bar baterai */
+      // SafeArea digunakan supaya konten tidak tertutup notch atau bar baterai
       body: SafeArea( 
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               
-              /* BAGIAN HEADER CUSTOM: LOGO DAN TULISAN KELAS SAYA */
+              // BAGIAN HEADER CUSTOM: LOGO DAN TULISAN KELAS SAYA
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                    /* Logo Luarsekolah di pojok kiri */
+                    // Logo Luarsekolah di pojok kiri
                     Image.asset(
                       'assets/luarsekolahlogo.png',
-                      height: 24, /* Tinggi logo disamakan dengan ukuran teks */
+                      height: 24, // Tinggi logo disamakan dengan ukuran teks
                       fit: BoxFit.contain,
                     ),
                     
-                    /* Tulisan Kelas Saya di posisi tengah */
+                    // Tulisan Kelas Saya di posisi tengah
                     Expanded(
                       child: Center(
                         child: Text(
@@ -46,13 +46,13 @@ class CourseDetailView extends StatelessWidget {
                       ),
                     ),
                     
-                    /* Spacer di ujung kanan agar tulisan tetap stabil di tengah */
+                    // Spacer di ujung kanan agar tulisan tetap stabil di tengah
                     const SizedBox(width: 40), 
                   ],
                 ),
               ),
 
-              /* WIDGET PEMUTAR VIDEO */
+              // WIDGET PEMUTAR VIDEO
               GetBuilder<CourseDetailController>(
                 builder: (_) {
                   return AspectRatio(
@@ -79,14 +79,26 @@ class CourseDetailView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
+
+                    // INDIKATOR PROGRESS VIDEO YANG SEDANG DIPUTAR
+                    Obx(() => Text(
+                      "Sedang Memutar: Video ${controller.currentVideoIndex.value + 1} dari 5 Video",
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        color: Colors.teal,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )),
+                    const SizedBox(height: 4),
+
                     Text(
-                      'Tonton video sampai selesai untuk menyelesaikan kelas.',
-                      style: GoogleFonts.montserrat(fontSize: 14),
+                      'Tonton seluruh rentetan 5 video sampai selesai untuk mendapatkan sertifikat.',
+                      style: GoogleFonts.montserrat(fontSize: 13, color: Colors.black54),
                     ),
 
                     const SizedBox(height: 32),
 
-                    /* BAGIAN DESKRIPSI MATERI */
+                    // BAGIAN DESKRIPSI MATERI
                     Text(
                       'Tentang Kelas Ini',
                       style: GoogleFonts.montserrat(
@@ -108,43 +120,51 @@ class CourseDetailView extends StatelessWidget {
 
                     const SizedBox(height: 40),
                     
-                    /* LOGIKA TOMBOL SERTIFIKAT */
-                    Obx(() => controller.isVideoFinished.value
-                        ? ElevatedButton.icon(
-                            onPressed: () {
-                              /* Navigasi ke halaman sertifikat */
-                              Get.to(
-                                () => const CertificateView(),
-                                arguments: {
-                                  'userName': 'Meradita', 
-                                  'title': controller.title,
-                                },
-                              );
-                            },
-                            icon: const Icon(Icons.workspace_premium),
-                            label: const Text("Lihat Sertifikat"),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.teal,
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size(double.infinity, 50),
-                              shape: RoundedRectangleBorder(
+                    // LOGIKA BARU TOMBOL SERTIFIKAT (Wajib 5 video selesai)
+                    Obx(() {
+                      final bool canClaim = controller.isEligibleForCertificate;
+                      final int totalWatched = controller.watchedVideoIndices.length;
+
+                      return canClaim
+                          ? ElevatedButton.icon(
+                              onPressed: () {
+                                // Navigasi ke halaman sertifikat
+                                Get.to(
+                                  () => const CertificateView(),
+                                  arguments: {
+                                    'userName': 'Meradita', 
+                                    'title': controller.title,
+                                  },
+                                );
+                              },
+                              icon: const Icon(Icons.workspace_premium),
+                              label: const Text("Lihat Sertifikat"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.teal,
+                                foregroundColor: Colors.white,
+                                minimumSize: const Size(double.infinity, 50),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            )
+                          : Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                            ),
-                          )
-                        : Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              "Sertifikat akan tersedia setelah video selesai.",
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.montserrat(color: Colors.grey[700]),
-                            ),
-                          )),
+                              child: Text(
+                                "Sertifikat Terkunci ($totalWatched/5 Video Selesai)",
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            );
+                    }),
                   ],
                 ),
               ),

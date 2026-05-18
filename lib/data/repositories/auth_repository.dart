@@ -15,20 +15,26 @@ class AuthRepositoryImpl implements IAuthRepository {
     required String password,
     required String phone,
   }) async {
-    // 1. Buat User di Auth
+    // 1. Buat User di Firebase Authentication
     UserCredential credential = await _auth.createUserWithEmailAndPassword(
       email: email, password: password
     );
 
-    // 2. LOGIKA RBAC
-    String assignedRole = email.endsWith('@luarsekolah.com') ? 'admin' : 'user';
+    String uid = credential.user!.uid;
 
-    // 3. Simpan ke Firestore (Perbaikan: role diganti assignedRole)
+    // 2. LOGIKA RBAC (Role-Based Access Control)
+    // Akun otomatis jadi admin jika UID-nya adalah UID baru kamu ATAU menggunakan email resmi luarsekolah
+    String assignedRole = 'user';
+    if (uid == 'nR3wOhJtVRkHwpoSp6Bp' || email.endsWith('@luarsekolah.com')) {
+      assignedRole = 'admin';
+    }
+
+    // 3. Simpan data lengkap user ke Firestore
     UserModel newUser = UserModel(
-      uid: credential.user!.uid,
+      uid: uid,
       email: email,
       name: name,
-      role: assignedRole, // Pakai variabel yang sudah dicek di atas
+      role: assignedRole,
     );
 
     await _db.collection('users').doc(newUser.uid).set(newUser.toMap());
@@ -38,8 +44,10 @@ class AuthRepositoryImpl implements IAuthRepository {
   Future<UserEntity?> getCurrentUserData() async {
     String? uid = _auth.currentUser?.uid;
     if (uid != null) {
+      // Mengambil dokumen user berdasarkan UID aktif saat ini
       var doc = await _db.collection('users').doc(uid).get();
-      if (doc.exists) {
+      if (doc.exists && doc.data() != null) {
+        // Mengonversi Map dari Firestore menjadi UserModel secara aman
         return UserModel.fromMap(doc.data()!, doc.id);
       }
     }

@@ -12,7 +12,7 @@ class MainController extends GetxController {
     _setupNotifications();
   }
 
-  /// Inisialisasi Local Notification + FCM + start listener
+  /// ini buattt inisialisasi Local Notification + FCM + start listener
   void _setupNotifications() async {
     await LocalNotificationService.initialize(); // wajib sebelum FCM listener
     await _notifService.initialize();
@@ -20,7 +20,7 @@ class MainController extends GetxController {
     _fetchToken();
   }
 
-  /// Ambil FCM token dan update observable
+  /// nah ini buat ambil FCM token dan update observable
   void _fetchToken() async {
     final token = await _notifService.getFCMToken();
     if (token != null) {

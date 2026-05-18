@@ -224,7 +224,8 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
                     leading: Image.network(c.thumbnailUrl, width: 60, height: 60, fit: BoxFit.cover),
                     title: Text(c.title, style: GoogleFonts.montserrat(fontWeight: FontWeight.w600)),
                     subtitle: Text('Harga: Rp ${c.price}'),
-                    trailing: authController.isAdmin 
+                    // PERBAIKAN DI SINI: Dibungkus Obx agar menu edit/delete langsung muncul ketika data admin siap
+                    trailing: Obx(() => authController.isAdmin 
                       ? PopupMenuButton<ClassOption>(
                           onSelected: (opt) => _handleMenuItemSelected(opt, c),
                           itemBuilder: (_) => const [
@@ -232,7 +233,8 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
                             PopupMenuItem(value: ClassOption.delete, child: Text('Delete')),
                           ],
                         )
-                      : null, 
+                      : const SizedBox.shrink(),
+                    ), 
                   ),
                 ))
             .toList(),
@@ -270,6 +272,7 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
           ],
         ),
       ),
+      // PERBAIKAN DI SINI: Memastikan Obx memantau perubahan authController.isAdmin secara penuh
       floatingActionButton: Obx(() {
         if (authController.isAdmin) {
           return FloatingActionButton.extended(
