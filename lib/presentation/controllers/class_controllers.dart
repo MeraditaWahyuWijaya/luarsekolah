@@ -8,7 +8,7 @@ import '../../data/providers/notification_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 
-enum ClassCategory { populer, spl }
+enum ClassCategory { populer, kelasku, spl }
 
 class ClassController extends GetxController {
   final ClassRepository repository;
@@ -61,9 +61,21 @@ class ClassController extends GetxController {
   Future<void> fetchClasses(ClassCategory category) async {
     try {
       isLoading.value = true;
-      final data = await repository.getFilteredClasses(
-          category == ClassCategory.populer ? 'Populer' : 'SPL');
+      String categoryString;
+      switch (category) {
+        case ClassCategory.populer:
+          categoryString = 'Populer';
+          break;
+        case ClassCategory.kelasku:
+          categoryString = 'Kelasku'; 
+          break;
+        case ClassCategory.spl:
+          categoryString = 'SPL';
+          break;
+      }
+      final data = await repository.getFilteredClasses(categoryString);
       filteredClasses.value = data;
+      
     } catch (e) {
       errorMessage.value = e.toString();
     } finally {
