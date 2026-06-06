@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import '../../presentation/controllers/class_controllers.dart';
 import '../../domain/entities/class_model.dart';
+import '../../presentation/controllers/auth_controller.dart';
 
 enum ClassOption { edit, delete }
 
@@ -18,8 +19,8 @@ class ClassScreen extends StatefulWidget {
 class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin {
   final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
   late TabController _tabController;
+  final authController = Get.find<AuthController>();
 
-  // Controller dan animation untuk animasi form
   late AnimationController _formAnimationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
@@ -28,8 +29,9 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
   void initState() {
     super.initState();
     final controller = Get.find<ClassController>();
+    
+    authController.fetchUserRole();
 
-    // Inisialisasi TabController
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
@@ -38,25 +40,21 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
       }
     });
 
-    // Inisialisasi AnimationController untuk form
     _formAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
 
-    // Scale animation untuk efek zoom
     _scaleAnimation = CurvedAnimation(
       parent: _formAnimationController,
       curve: Curves.easeOutBack,
     );
 
-    // Fade animation untuk efek muncul perlahan
     _fadeAnimation = CurvedAnimation(
       parent: _formAnimationController,
       curve: Curves.easeIn,
     );
 
-    // Listener untuk meng-trigger animasi saat form muncul/disappear
     controller.isFormVisible.listen((visible) {
       if (visible) {
         _formAnimationController.forward();
@@ -73,7 +71,6 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
     super.dispose();
   }
 
-  // Fungsi untuk mengeksekusi menu Edit/Delete
   void _handleMenuItemSelected(ClassOption option, ClassModel data) {
     final controller = Get.find<ClassController>();
     if (option == ClassOption.edit) {
@@ -83,7 +80,6 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
     }
   }
 
-  // Dialog konfirmasi hapus
   Future<void> _showDeleteConfirmation(ClassModel data) async {
     final controller = Get.find<ClassController>();
     await Get.dialog<bool>(
@@ -91,9 +87,7 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
         title: const Text('Konfirmasi Hapus'),
         content: Text('Anda yakin ingin menghapus kelas "${data.title}"?'),
         actions: [
-          TextButton(
-              onPressed: () => Get.back(),
-              child: const Text('Batal')),
+          TextButton(onPressed: () => Get.back(), child: const Text('Batal')),
           ElevatedButton(
               onPressed: () {
                 controller.deleteClass(data.id);
@@ -105,7 +99,6 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
     );
   }
 
-  // Widget form yang sudah ada
   Widget _buildForm() {
     final controller = Get.find<ClassController>();
     return Obx(() {
@@ -116,7 +109,7 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
           ? {
               'title': editData!.title,
               'price': editData.price.toString(),
-              'category': editData.category == "SPL" ? ClassCategory.spl : ClassCategory.populer,
+              'category': editData.category == "Kelasku" ? ClassCategory.spl : ClassCategory.populer,
               'thumbnailUrl': editData.thumbnailUrl,
             }
           : null;
@@ -157,9 +150,8 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
                 decoration: const InputDecoration(labelText: 'Kategori', border: OutlineInputBorder()),
                 items: ClassCategory.values
                     .map((c) => DropdownMenuItem(
-                        value: c, child: Text(c == ClassCategory.populer ? 'Populer' : 'SPL')))
+                        value: c, child: Text(c == ClassCategory.populer ? 'Populer' : 'Kelasku')))
                     .toList(),
-                initialValue: initialValues != null ? initialValues['category'] : ClassCategory.populer,
               ),
               const SizedBox(height: 12),
               FormBuilderTextField(
@@ -183,7 +175,7 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
                         final mapData = {
                           'title': data['title'],
                           'price': int.parse(data['price']),
-                          'category': data['category'] == ClassCategory.spl ? "SPL" : "Populer",
+                          'category': data['category'] == ClassCategory.spl ? "Kelasku" : "Populer",
                           'thumbnailUrl': data['thumbnailUrl'],
                         };
                         if (isEditing) {
@@ -205,7 +197,6 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
     });
   }
 
-  // Form dengan animasi zoom + fade
   Widget _buildFormWithAnimation() {
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -216,7 +207,6 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
     );
   }
 
-  // Widget list kelas
   Widget _buildClassList() {
     final controller = Get.find<ClassController>();
     return Obx(() {
@@ -234,13 +224,17 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
                     leading: Image.network(c.thumbnailUrl, width: 60, height: 60, fit: BoxFit.cover),
                     title: Text(c.title, style: GoogleFonts.montserrat(fontWeight: FontWeight.w600)),
                     subtitle: Text('Harga: Rp ${c.price}'),
-                    trailing: PopupMenuButton<ClassOption>(
-                      onSelected: (opt) => _handleMenuItemSelected(opt, c),
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(value: ClassOption.edit, child: Text('Edit')),
-                        PopupMenuItem(value: ClassOption.delete, child: Text('Delete')),
-                      ],
-                    ),
+                    // PERBAIKAN DI SINI: Dibungkus Obx agar menu edit/delete langsung muncul ketika data admin siap
+                    trailing: Obx(() => authController.isAdmin 
+                      ? PopupMenuButton<ClassOption>(
+                          onSelected: (opt) => _handleMenuItemSelected(opt, c),
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(value: ClassOption.edit, child: Text('Edit')),
+                            PopupMenuItem(value: ClassOption.delete, child: Text('Delete')),
+                          ],
+                        )
+                      : const SizedBox.shrink(),
+                    ), 
                   ),
                 ))
             .toList(),
@@ -262,7 +256,7 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
           labelStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w500),
           tabs: const [
             Tab(text: 'Populer'),
-            Tab(text: 'SPL'),
+            Tab(text: 'Kelasku'),
           ],
         ),
       ),
@@ -270,7 +264,6 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Tampilkan form dengan animasi
             Obx(() => controller.isFormVisible.value
                 ? _buildFormWithAnimation()
                 : const SizedBox()),
@@ -279,13 +272,19 @@ class _ClassScreenState extends State<ClassScreen> with TickerProviderStateMixin
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => controller.showAddForm(),
-        backgroundColor: Colors.green,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: Text('Tambah Kelas',
-            style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.w500)),
-      ),
+      // PERBAIKAN DI SINI: Memastikan Obx memantau perubahan authController.isAdmin secara penuh
+      floatingActionButton: Obx(() {
+        if (authController.isAdmin) {
+          return FloatingActionButton.extended(
+            onPressed: () => controller.showAddForm(),
+            backgroundColor: Colors.green,
+            icon: const Icon(Icons.add, color: Colors.white),
+            label: Text('Tambah Kelas',
+                style: GoogleFonts.montserrat(color: Colors.white, fontWeight: FontWeight.w500)),
+          );
+        }
+        return const SizedBox.shrink();
+      }),
     );
   }
 }

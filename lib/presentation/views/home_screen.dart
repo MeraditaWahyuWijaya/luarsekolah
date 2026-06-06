@@ -3,7 +3,14 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:luarsekolah/presentation/widgets/hover_card.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:luarsekolah/data/providers/firebase_auth_service.dart';
-
+import 'dart:io'; // untuk FileImage
+import 'package:shared_preferences/shared_preferences.dart'; // untuk simpan path foto
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:get/get.dart';
+import 'package:luarsekolah/presentation/views/content_detail_view.dart';
+import 'package:image_picker/image_picker.dart';
+ //isi artikel 
 
 
 class HomeScreen extends StatefulWidget {
@@ -11,9 +18,11 @@ class HomeScreen extends StatefulWidget {
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
+  
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String? profilePhotoPath; 
   final Color primaryGreen = const Color.fromRGBO(7, 126, 96, 1);
   final User? user = FirebaseAuth.instance.currentUser; // ambil user di build atau initState
   final List<String> bannerImages = [
@@ -21,8 +30,60 @@ class _HomeScreenState extends State<HomeScreen> {
     'assets/bannercar1.jpg',
     'assets/bannercar2.jpg',
   ];
+    bool isUploaded = false;
+    List<Map<String, dynamic>> notifications = [];
 
-  int _notificationCount = 3;
+     int get _notificationCount =>
+      notifications.where((n) => n['isRead'] == false).length;
+
+     void listenClassNotifications() {
+  if (user == null) return;
+
+  FirebaseFirestore.instance
+      .collection('class_notifications')
+      .where('userId', isEqualTo: user!.uid)
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .listen((snapshot) {
+    setState(() {
+      notifications = snapshot.docs.map((doc) {
+        return {
+          'id': doc.id,
+          'title': doc['title'],
+          'isRead': doc['isRead'],
+        };
+      }).toList();
+    });
+  });
+}
+Future<void> openCustomerServiceEmail() async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: 'luarsekolah@gmail.com',
+      query: 'subject=Bantuan Aplikasi&body=Halo tim LuarSekolah,%0A%0ASaya membutuhkan bantuan terkait...',
+    );
+
+    if (await canLaunchUrl(emailUri)) {
+      await launchUrl(emailUri);
+    }
+  }
+
+
+
+   // initState untuk load foto profil
+  @override
+  void initState() {
+    super.initState();
+    _loadProfilePhoto();
+     listenClassNotifications();
+  }
+
+  Future<void> _loadProfilePhoto() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      profilePhotoPath = prefs.getString('userProfilePhoto');
+    });
+  }
 
   Widget _buildBanner() {
     return Container(
@@ -79,6 +140,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildVoucherInputCard() {
+    Future<void> pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        isUploaded = true;
+      });
+    }
+  }
     return Container(
       padding: const EdgeInsets.all(16), 
       decoration: BoxDecoration(
@@ -116,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
     mainAxisSize: MainAxisSize.min,
     children: [
       const Text(
-        'Redeem Voucher Prakerjamu',
+        'Upload Bukti Transfer',
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 16,
@@ -130,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
       SizedBox( 
         width: 250,
         child: const Text(
-          'Kamu pengguna Prakerja? Segera redeem vouchermu sekarang juga',
+          'Kamu pengguna Luarsekolah? Segera redeem dengan upload bukti transfermu sekarang juga',
           // Ubah textAlign menjadi TextAlign.center agar teks di tengah di dalam SizedBox
           textAlign: TextAlign.center, 
           style: TextStyle(
@@ -141,23 +212,35 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
                 const SizedBox(height: 15),
-                OutlinedButton(
-                  onPressed: () {
-                    print('Masukkan voucher Prakerja');
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: primaryGreen),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                  ),
-                  child: const Text(
-                    'Masukkan Voucher Prakerja',
-                    style: TextStyle(fontSize: 14, color: Colors.black),
-                  ),
-                ),
+               OutlinedButton(
+  onPressed: isUploaded ? null : () async {
+    // Fungsi untuk ambil foto
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        isUploaded = true; // Mengubah status jadi berhasil
+      });
+    }
+  },
+  style: OutlinedButton.styleFrom(
+    // Warna border jadi abu-abu kalau sudah berhasil
+    side: BorderSide(color: isUploaded ? Colors.grey : primaryGreen),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+  ),
+  child: Text(
+    isUploaded ? 'Berhasil mengaktifkan kelas' : 'Upload Bukti Transfer',
+    style: TextStyle(
+      fontSize: 14, 
+      color: isUploaded ? primaryGreen : Colors.black,
+      fontWeight: isUploaded ? FontWeight.bold : FontWeight.normal,
+    ),
+  ),
+)
               ],
             ),
           ),
@@ -274,12 +357,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildArticleCardContent(String title, String snippet, String imageUrl) {
-    return Padding(
+  Widget _buildArticleCardContent(String title, String snippet, String imageUrl, String fullContent) {
+    return InkWell(
+    borderRadius: BorderRadius.circular(12),
+    onTap: () {
+      Get.to(
+        () => const ContentDetailView(),
+        arguments: {
+          'title': title,
+          'content': fullContent,
+          'image': imageUrl,
+          'type': 'article',
+        },
+      );
+    },
+    child: Padding(
       padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
@@ -291,28 +386,33 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Text(title,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 8),
-          Expanded(
-            child: Text(
-              snippet,
-              style: TextStyle(color: Colors.grey[700]),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            snippet,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: Colors.grey[700]),
           ),
           const SizedBox(height: 8),
           const Text(
             'Baca selengkapnya',
-            style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.blue,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
-    );
-  }
-
+    ),
+  );
+}
   Widget _buildMagangBanner() {
     return Container(
       height: 200,
@@ -386,11 +486,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   children: [
                    CircleAvatar(
-                    backgroundImage: user?.photoURL != null
-                        ? NetworkImage(user!.photoURL!)
-                        : const AssetImage('assets/nailong.jpg') as ImageProvider,
-                    radius: 18,
-                  ),
+  backgroundImage: profilePhotoPath != null
+      ? FileImage(File(profilePhotoPath!)) // pakai foto terbaru
+      : user?.photoURL != null
+          ? NetworkImage(user!.photoURL!)
+          : const AssetImage('assets/nailong.jpg') as ImageProvider,
+  radius: 18,
+),
+
                     const SizedBox(width: 12),
 
 
@@ -404,7 +507,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               TextStyle(fontSize: 12, color: Colors.white70),
                         ),
                         Text(
-                          user?.displayName ?? 'User',
+                          user?.displayName ?? 'User',//diganti usernya 
                           style: TextStyle(
                               fontWeight: FontWeight.w500,
                               fontSize: 16,
@@ -413,47 +516,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const Spacer(),
-                    
-                    Stack(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.notifications_none,
-                              size: 30, color: Colors.white),
-                          onPressed: () {
-                            setState(() {
-                              _notificationCount = 0;
-                            });
-                          },
-                        ),
-                        
-                        if (_notificationCount > 0)
-                          Positioned(
-                            right: 8, 
-                            top: 8,
-                            child: Container(
-                              padding: const EdgeInsets.all(4), 
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(10), 
-                              ),
-                              constraints: const BoxConstraints(
-                                minWidth: 16, 
-                                minHeight: 16,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  _notificationCount > 9 ? '9+' : '$_notificationCount',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
                   ],
                 ),
               ),
@@ -504,7 +566,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     _buildVoucherInputCard(),
                     const SizedBox(height: 20),
 
-                    const Text('Kelas Terpopuler di Prakerja',
+                    const Text('Kelas Terpopuler di Luarsekolah',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 18)),
                     const SizedBox(height: 12),
@@ -518,14 +580,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               rating: 4.5,
                               price: 'Rp 1.500.000',
                               imageUrl: 'assets/poster1.png',
-                              tags: const ['Prakerja'], //prakerja hijau 
+                              tags: const ['Tersedia'], //prakerja hijau 
                           ),
                           CourseCardWithHover(
                               title: 'Meningkatkan Pertumbuhan Tanaman',
                               rating: 4.5,
                               price: 'Rp 1.500.000',
                               imageUrl: 'assets/poster2.png',
-                              tags: const ['Prakerja'],
+                              tags: const ['Tersedia'],
                           ),
                         ],
                       ),
@@ -605,30 +667,34 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
-
+                  
                     const SizedBox(height: 24),
                     const Text('Artikel',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 18)),
                     const SizedBox(height: 12),
                     SizedBox(
-                      height: 300,
+                      height: 303,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [
                           HoverEffectWrapper(
                             width: 200,
                             child: _buildArticleCardContent(
-                                'Transformasi Digital Pendidikan: Tantangan dan...',
-                                'Artikel ini membahas secara mendalam bagaiman...',
-                                'assets/artikel1.png'),
+                                  'Transformasi Digital Pendidikan: Tantangan dan Solusinya',
+                                  'Artikel ini membahas secara mendalam bagaiman...',
+                                  'assets/artikel1.png',
+                                  '''     Transformasi digital dalam dunia pendidikan kini bukan lagi sekadar tren, melainkan sebuah kebutuhan mendasar untuk menyiapkan generasi yang kompeten di era teknologi. Secara esensi, proses ini melibatkan integrasi teknologi informasi ke dalam seluruh aspek pembelajaran, mulai dari manajemen kurikulum hingga interaksi di ruang kelas virtual. Namun, transisi ini menghadapi tantangan besar, terutama terkait kesenjangan akses digital di berbagai daerah. Ketidaksiapan infrastruktur jaringan dan keterbatasan perangkat keras bagi siswa di wilayah terpencil sering kali memperlebar jurang kualitas pendidikan. Selain itu, hambatan muncul dari sisi sumber daya manusia, di mana masih banyak tenaga pendidik yang membutuhkan adaptasi lebih dalam untuk menguasai platform pembelajaran digital secara efektif agar materi yang disampaikan tetap menarik dan tidak membosankan bagi siswa.
+\n\nUntuk mengatasi hambatan tersebut, diperlukan langkah strategis yang komprehensif dari berbagai pihak. Pemerintah dan institusi pendidikan perlu memprioritaskan pembangunan infrastruktur digital yang merata serta menyediakan platform pembelajaran yang ringan dan mudah diakses melalui perangkat seluler. Peningkatan literasi digital bagi guru juga menjadi kunci, agar mereka mampu memanfaatkan fitur-fitur modern seperti sistem manajemen pembelajaran (LMS) berbasis cloud yang memungkinkan distribusi materi secara real-time dan interaktif. Selain itu, aspek keamanan data pribadi siswa harus menjadi prioritas utama dalam setiap pengembangan aplikasi pendidikan guna membangun kepercayaan masyarakat terhadap ekosistem digital. Dengan kolaborasi yang kuat antara teknologi dan kesiapan SDM, transformasi digital diharapkan mampu menciptakan akses pendidikan yang lebih inklusif, fleksibel, dan relevan dengan tuntutan zaman.'''),
                           ),
                           HoverEffectWrapper(
                             width: 200,
                             child: _buildArticleCardContent(
                                 'Menerapkan Pembelajaran Berbasis Proyek (PBL)...',
                                 'Pembelajaran Berbasis Proyek (Project-Based Learn...',
-                                'assets/artikel2.jpg'),
+                                'assets/artikel2.jpg',
+                                '''   Penerapan metode Problem-Based Learning (PBL) dalam ekosistem pendidikan digital mampu mentransformasi peran siswa dari penerima informasi pasif menjadi pemecah masalah yang aktif dan kolaboratif. Melalui pendekatan ini, siswa dihadapkan pada skenario dunia nyata yang relevan dengan bidang minat mereka, sehingga proses belajar tidak lagi terasa teoretis melainkan lebih aplikatif dan bermakna. 
+                                Dengan dukungan teknologi seperti platform kolaborasi daring dan akses literasi digital yang luas, PBL memfasilitasi pengembangan berpikir kritis serta keterampilan teknis secara simultan, yang pada akhirnya sangat efektif untuk membangun kemandirian belajar dan kesiapan profesional di masa depan.'''),
                           ),
                         ],
                       ),

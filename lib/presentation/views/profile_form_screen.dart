@@ -1,9 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart'; // pakai image picker
 import 'package:luarsekolah/presentation/views/profile_image_full_screen.dart';
-import 'package:luarsekolah/presentation/views/login_screen.dart'; // pastikan path sesuai
+import 'package:luarsekolah/presentation/views/login_screen.dart';
 
 class ProfileFormScreen extends StatefulWidget {
   const ProfileFormScreen({super.key});
@@ -23,6 +25,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
   bool _isFormFilled = false;
 
   User? _firebaseUser;
+  String? _selectedImagePath; // path lokal foto yang dipilih
 
   @override
   void initState() {
@@ -30,16 +33,19 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     _loadUserData();
   }
 
+  // load data user dari Firebase dan SharedPreferences
   Future<void> _loadUserData() async {
     _firebaseUser = FirebaseAuth.instance.currentUser;
-
     final prefs = await SharedPreferences.getInstance();
+
     setState(() {
-      _nameController.text = _firebaseUser?.displayName ?? prefs.getString('userName') ?? '';
+      _nameController.text =
+          _firebaseUser?.displayName ?? prefs.getString('userName') ?? '';
       _dobController.text = prefs.getString('userDOB') ?? '';
       _addressController.text = prefs.getString('userAddress') ?? '';
       _selectedGender = prefs.getString('userGender');
       _jobStatus = prefs.getString('userJobStatus');
+      _selectedImagePath = prefs.getString('userProfilePhoto');
     });
 
     _checkFormFilled();
@@ -55,14 +61,21 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     });
   }
 
+  // simpan profile termasuk foto ke SharedPreferences dan Firebase
   Future<void> _saveProfile() async {
     if (_profileFormKey.currentState!.validate()) {
       final prefs = await SharedPreferences.getInstance();
+
       await prefs.setString('userName', _nameController.text);
       await prefs.setString('userDOB', _dobController.text);
       await prefs.setString('userGender', _selectedGender ?? '');
       await prefs.setString('userJobStatus', _jobStatus ?? '');
       await prefs.setString('userAddress', _addressController.text);
+
+      // simpan path foto profil
+      if (_selectedImagePath != null) {
+        await prefs.setString('userProfilePhoto', _selectedImagePath!);
+      }
 
       // update Firebase displayName
       if (_firebaseUser != null) {
@@ -82,10 +95,11 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     }
   }
 
+  // logout user
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+     await prefs.remove('userToken'); //awalnya di clear jadinya data ilang pas masuk lg
 
     if (mounted) {
       Navigator.pushAndRemoveUntil(
@@ -93,6 +107,16 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
         MaterialPageRoute(builder: (_) => const LoginScreen()),
         (route) => false,
       );
+    }
+  }
+
+  // pick image dari galeri
+  Future<void> _pickImage() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _selectedImagePath = picked.path; // simpan path sementara
+      });
     }
   }
 
@@ -104,7 +128,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Form(
-           key: _profileFormKey,
+            key: _profileFormKey,
             onChanged: _checkFormFilled,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,12 +139,11 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                     Hero(
                       tag: 'profile-image-hero-tag',
                       child: ClipOval(
-                        child: Image.asset(
-                          'assets/nailong.jpg',
-                          width: 90,
-                          height: 90,
-                          fit: BoxFit.cover,
-                        ),
+                        child: _selectedImagePath != null
+                            ? Image.file(File(_selectedImagePath!),
+                                width: 90, height: 90, fit: BoxFit.cover)
+                            : Image.asset('assets/nailong.jpg',
+                                width: 90, height: 90, fit: BoxFit.cover),
                       ),
                     ),
                     const SizedBox(width: 15),
@@ -137,7 +160,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   ],
                 ),
                 const SizedBox(height: 20),
-
                 Text(
                   "Edit Profil",
                   style: GoogleFonts.montserrat(
@@ -152,23 +174,17 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ProfileImageFullScreen(),
-                          ),
-                        );
+                      onTap: () async {
+                        await _pickImage(); // pilih foto baru
                       },
                       child: Hero(
                         tag: 'profile-image-hero-tag',
                         child: ClipOval(
-                          child: Image.asset(
-                            'assets/nailong.jpg',
-                            width: 80,
-                            height: 80,
-                            fit: BoxFit.cover,
-                          ),
+                          child: _selectedImagePath != null
+                              ? Image.file(File(_selectedImagePath!),
+                                  width: 80, height: 80, fit: BoxFit.cover)
+                              : Image.asset('assets/nailong.jpg',
+                                  width: 80, height: 80, fit: BoxFit.cover),
                         ),
                       ),
                     ),
@@ -183,7 +199,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                       child: SizedBox(
                         width: MediaQuery.of(context).size.width * 0.8,
                         child: OutlinedButton.icon(
-                          onPressed: () {},
+                          onPressed: _pickImage,
                           style: OutlinedButton.styleFrom(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -202,11 +218,8 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 ),
 
                 const SizedBox(height: 20),
-                Text("Data Diri",
-                    style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 10),
 
+                // ... semua field input tetap sama
                 _buildTextField(
                   controller: _nameController,
                   label: "Nama Lengkap",
@@ -274,7 +287,6 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
                 
                 const SizedBox(height: 10),
                 
-                // Logout button
                 ElevatedButton(
                   onPressed: _logout,
                   style: ElevatedButton.styleFrom(
@@ -295,6 +307,7 @@ class _ProfileFormScreenState extends State<ProfileFormScreen> {
     );
   }
 
+  // =========================================================
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,

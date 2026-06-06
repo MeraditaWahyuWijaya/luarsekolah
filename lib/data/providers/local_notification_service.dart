@@ -1,50 +1,54 @@
-import 'package:luarsekolah/presentation/controllers/main_controller.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:get/get.dart';
-import 'package:luarsekolah/presentation/controllers/main_controller.dart'; 
-
+import 'package:luarsekolah/presentation/controllers/main_controller.dart';
+// Local notification di device
 class LocalNotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
+  /// Inisialisasi local notification dan channel
   static Future<void> initialize() async {
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    
+
     await _notifications.initialize(
       const InitializationSettings(android: androidSettings),
       onDidReceiveNotificationResponse: (response) {
         final todoId = response.payload;
         if (todoId != null) {
-          // Panggil Controller untuk navigasi Deep Link
+          // Panggil Controller untuk navigasi deep link
           Get.find<MainController>().handleNotificationClick(todoId);
         }
       },
     );
+
     await _createNotificationChannel();
   }
 
+  /// Membuat channel notifikasi untuk Android
   static Future<void> _createNotificationChannel() async {
     const channel = AndroidNotificationChannel(
-      'todo_updates_channel', 
-      'Pembaruan To-Do', 
-      importance: Importance.max,
+      'todo_updates_channel', // id
+      'Pembaruan To-Do', // name
       description: 'Notifikasi untuk perubahan status dan data To-Do',
+      importance: Importance.max,
     );
+
     await _notifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
   }
 
-  // Dipanggil oleh FCM Service untuk menampilkan notif di FOREGROUND
+  /// Menampilkan notifikasi langsung (foreground)
   static Future<void> show({
     required String title,
     required String body,
     String? payload, // Akan berisi todoId
   }) async {
     await _notifications.show(
-      title.hashCode, 
+      title.hashCode,
       title,
       body,
       const NotificationDetails(
@@ -58,7 +62,7 @@ class LocalNotificationService {
     );
   }
 
-  // Dipanggil untuk PENJADWALAN OFFLINE (Pengingat Batas Waktu)
+  /// Menjadwalkan notifikasi di waktu tertentu (offline reminder)
   static Future<void> schedule({
     required String title,
     required String body,
@@ -71,10 +75,13 @@ class LocalNotificationService {
       body,
       tz.TZDateTime.from(scheduledTime, tz.local),
       const NotificationDetails(
-        android: AndroidNotificationDetails('todo_updates_channel', 'Pembaruan To-Do'),
+        android: AndroidNotificationDetails(
+          'todo_updates_channel',
+          'Pembaruan To-Do',
+        ),
       ),
       payload: payload,
-   androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
 }

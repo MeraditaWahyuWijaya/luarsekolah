@@ -52,8 +52,11 @@ dependencies:
   image_picker: ^1.2.1
   #test: ^1.28.0
   mockito: ^5.6.1
-  
-  
+  url_launcher: ^6.3.2
+  youtube_player_flutter: ^9.1.3  
+  video_player: 2.8.1  # Versi ini cocok dengan SDK 3.9.x
+  chewie: 1.7.5        # Sesuaikan juga chewie-nya
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -104,6 +107,18 @@ flutter:
   - 'assets/nailong.jpg'
   - 'assets/pestisida.jpg'
   - 'assets/pengolahansampah.png'
+  - 'assets/ui.jpg'
+  - 'assets/dart.jpg'
+  - 'assets/artikel1.png'
+  - 'assets/artikel2.jpg'
+  - 'assets/todo.png'
+  - 'assets/materidesign.mp4'
+  - 'assets/designgrafis.jpg'
+  - 'assets/template_sertifikat.png'
+  - 'assets/video1.mp4'
+  - 'assets/video2.mp4'
+  - 'assets/video3.mp4'
+  - 'assets/video4.mp4'
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

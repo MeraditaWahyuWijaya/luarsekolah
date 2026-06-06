@@ -10,7 +10,7 @@ import 'package:luarsekolah/presentation/controllers/todo_controllers.dart';
 import '../bindings/class_binding.dart';
 import '../bindings/todo_binding.dart';
 import 'package:luarsekolah/presentation/controllers/class_controllers.dart';
-
+//BOTTOMBAR
 const Color _kGreen = Color.fromRGBO(7, 126, 96, 1);
 
 class CustomBottomNavBar extends StatelessWidget {
@@ -38,7 +38,7 @@ class CustomBottomNavBar extends StatelessWidget {
       {'label': 'Beranda', 'asset': 'assets/beranda.png'},
       {'label': 'Kelas', 'asset': 'assets/kelas.png'},
       {'label': 'Kelasku', 'asset': 'assets/kelasku.png'},
-      {'label': 'koinLS', 'asset': 'assets/akun.png'},
+      {'label': 'To-Do', 'asset': 'assets/todo.png'},
       {'label': 'Akun', 'asset': 'assets/koinls.png'},
     ];
 
@@ -113,7 +113,7 @@ class _MainScreenWithNavBarState extends State<MainScreenWithNavBar> {
     precacheImage(const AssetImage('assets/beranda.png'), context);
     precacheImage(const AssetImage('assets/kelas.png'), context);
     precacheImage(const AssetImage('assets/kelasku.png'), context);
-    precacheImage(const AssetImage('assets/akun.png'), context);
+    precacheImage(const AssetImage('assets/todo.png'), context);
     precacheImage(const AssetImage('assets/koinls.png'), context);
   }
 

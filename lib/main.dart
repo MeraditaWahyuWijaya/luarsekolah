@@ -6,16 +6,20 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:luarsekolah/data/providers/notification_service.dart';
+// Import wajib untuk inisialisasi notifikasi lokal
+import 'package:luarsekolah/data/providers/local_notification_service.dart'; 
 import 'firebase_options.dart';
 import 'package:luarsekolah/presentation/bindings/notification_binding.dart'; 
 import 'package:luarsekolah/presentation/bindings/auth_binding.dart'; 
 import 'package:luarsekolah/presentation/bindings/todo_binding.dart';
 import 'package:luarsekolah/presentation/bindings/class_binding.dart'; 
+// Asumsi import view yang diperlukan (saya tambahkan view todo dashboard yang hilang)
 import 'package:luarsekolah/presentation/views/coin_ls_screen.dart';
 import 'package:luarsekolah/presentation/views/class_screen.dart';
 import 'package:luarsekolah/presentation/views/login_screen.dart'; 
 import 'package:luarsekolah/presentation/views/register_screen.dart'; 
 import 'package:luarsekolah/presentation/views/todo_detail_page.dart';
+import 'package:luarsekolah/presentation/views/coin_ls_screen.dart'; // Tambahan asumsi view
 
 // FCM BACKGROUND HANDLER
 // Fungsi global untuk menangani pesan saat aplikasi ditutup (Terminated)
@@ -50,9 +54,16 @@ void main() async {
   // Daftarkan Background Handler FCM
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // Inisialisasi NotificationService di awal app
+  // -----------------------------------------------------------
+  // KODE PERBAIKAN: Memanggil inisialisasi LocalNotificationService
+  // -----------------------------------------------------------
+  
+  // 1. Inisialisasi Local Notification Service (Wajib untuk notifikasi kelas baru)
+  await LocalNotificationService.initialize(); 
+
+  // 2. Inisialisasi NotificationService (FCM)
   final notificationService = NotificationService();
-  await notificationService.initialize();   // token akan diambil di sini
+  await notificationService.initialize(); 
   notificationService.startFCMListener();
 
   // Print token agar mudah dicari
@@ -89,26 +100,31 @@ class MyApp extends StatelessWidget {
           binding: AuthBinding()
         ),
         
-        // Rute Utama To-Do yang Memasang MainBinding (Notifikasi)
+        // Rute Utama To-Do yang Memasang MainBinding
         GetPage(
           name: AppRoutes.todoDashboard,
-          page: () => const TodoDashboardPage(), // Ganti dengan nama view Anda
-          binding: MainBinding(), // MainBinding di sini
+          page: () => const TodoDashboardPage(), 
+          binding: TodoBinding(), 
         ),
         
         // Rute Deep Link untuk Notifikasi
         GetPage(
           name: AppRoutes.todoDetail,
-          page: () => const TodoDetailPage(), // Ganti dengan nama view Detail Anda
-          binding: MainBinding(), // MainBinding di sini
+          page: () => const TodoDetailPage(), 
+          binding: TodoBinding(), 
         ),
 
         // Rute Lainnya
         GetPage(
-        name: AppRoutes.classDashboard, 
-        page: () => ClassScreen(), // Ganti dengan nama view Anda
-        binding: ClassBinding(),
-      ),
+          name: AppRoutes.classDashboard, 
+          page: () => const ClassScreen(), 
+          binding: ClassBinding(),
+        ),
+        GetPage(
+          name: '/coin',
+          page: () => const TodoDashboardPage(),
+          binding: ClassBinding(), 
+        )
       ],
     );
   }

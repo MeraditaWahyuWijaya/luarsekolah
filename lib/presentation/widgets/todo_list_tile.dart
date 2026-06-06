@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:luarsekolah/domain/entities/todo.dart';
 import 'package:luarsekolah/presentation/controllers/todo_controllers.dart'; 
 // Pastikan path ke TodoController sudah benar
-
+//Widget untuk tampilkan todo item
 // Fungsi helper untuk format waktu, diletakkan di luar kelas untuk menghindari error duplikasi.
 String _formatRelative(DateTime date) {
   final now = DateTime.now();
